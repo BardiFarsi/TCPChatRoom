@@ -1,0 +1,15 @@
+﻿'ChatRoom.exe' (Win32): Loaded 'C:\Users\farsi\source\CommunicationProtocols\TCPChatroom\ChatRoom\x64\Debug\ChatRoom.exe'. Symbols loaded.
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ntdll.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\kernel32.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\KernelBase.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\apphelp.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\msvcp140d.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140d.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1d.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ucrtbased.dll'. 
+The thread 17756 has exited with code 0 (0x0).
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. 
+'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\msvcrt.dll'. 
+The thread 64072 has exited with code 0 (0x0).
+The thread 33256 has exited with code 0 (0x0).
+The program '[38376] ChatRoom.exe' has exited with code 0 (0x0).
