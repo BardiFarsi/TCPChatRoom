@@ -29,5 +29,8 @@
     <ClInclude Include="Buffer_Sanitizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="backup.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
