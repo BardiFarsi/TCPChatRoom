@@ -1,6 +1,5 @@
 #pragma once
-#pragma once
-#include<iostream>
+#include <iostream>
 #include <string>
 #include <cctype>
 #include <vector>
@@ -8,8 +7,8 @@
 #include <boost/container/vector.hpp>
 
 constexpr size_t BUFFER_SIZE = 1024;
-//buffer sanitizer
 
+//buffer sanitizer
 class Buffer_Sanitizer 
 	: public boost::asio::mutable_buffer,  
 	  public boost::container::vector<char> {
