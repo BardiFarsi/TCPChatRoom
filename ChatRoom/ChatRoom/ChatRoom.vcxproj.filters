@@ -32,5 +32,8 @@
     <ClInclude Include="backup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Make_Span.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

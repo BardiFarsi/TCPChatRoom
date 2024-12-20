@@ -1,8 +1,11 @@
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
+#include "Make_Span.h"
 #include <vector>
 #include <exception>
 #include <string>
+#include <span>
+#include <concepts>
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
 #include <nlohmann/json.hpp>
@@ -12,6 +15,8 @@
 #if BOOST_VERSION < 108600
 #   error "This program need boost 1.86.0 or higher!"
 #endif
+
+
 
 namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
@@ -45,10 +50,15 @@ int main(int argc, char* argv[]) {
 					throw boost::system::system_error(ec);
 				}
 				else {
+					std::span<std::byte> buffSpan = Make_Span(buffVec);
 					asio::mutable_buffer mtBuffer(buffVec.data(), length); 
-					Buffer_Sanitizer sanitizer(buffVec.data(), length);
-					std::string response = sanitizer(mtBuffer);
-					console.log(response);
+					Buffer_Sanitizer sanitizer;
+					std::string responseMT = sanitizer(mtBuffer);
+					std::string responseSpan = sanitizer(buffSpan);
+					std::string responseVec = sanitizer(buffVec);
+					console.log("The response from Boost Mutable Obj:", responseMT);
+					console.log("The response from span:", responseSpan);
+					console.log("The response from Vector:", responseVec);
 				}
 			}
 		}
