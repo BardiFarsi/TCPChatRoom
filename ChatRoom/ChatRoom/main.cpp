@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 					throw boost::system::system_error(ec);
 				}
 				else {
-					std::span<std::byte> buffSpan = Make_Span(buffVec);
+					std::span<std::byte> buffSpan = Make_Span<std::vector<char>>(buffVec);
 					asio::mutable_buffer mtBuffer(buffVec.data(), length); 
 					Buffer_Sanitizer sanitizer;
 					std::string responseMT = sanitizer(mtBuffer);

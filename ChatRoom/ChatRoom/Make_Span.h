@@ -7,8 +7,8 @@
 
 template<typename T>
 concept valid_type = std::same_as<T, char> ||
-					  std::same_as<T, unsigned char> ||
-					  std::same_as<T, std::byte>;
+					 std::same_as<T, unsigned char> ||
+					 std::same_as<T, std::byte>;
 
 template <typename Container>
 class Make_Span
