@@ -1,6 +1,6 @@
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
-#include "Make_Span.h"
+#include "Span_Factory.h"
 #include <vector>
 #include <exception>
 #include <string>
@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
 					throw boost::system::system_error(ec);
 				}
 				else {
-					std::span<std::byte> buffSpan = Make_Span<std::vector<char>>(buffVec);
+					Span_Factory make_span;
+					std::span<std::byte> buffSpan = make_span(buffVec);
 					asio::mutable_buffer mtBuffer(buffVec.data(), length); 
 					Buffer_Sanitizer sanitizer;
 					std::string responseMT = sanitizer(mtBuffer);

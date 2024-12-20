@@ -138,7 +138,7 @@
     <ClInclude Include="Buffer_Sanitizer.h" />
     <ClInclude Include="backup.h" />
     <ClInclude Include="LOGGER.h" />
-    <ClInclude Include="Make_Span.h" />
+    <ClInclude Include="Span_Factory.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

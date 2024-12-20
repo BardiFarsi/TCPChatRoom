@@ -5,7 +5,6 @@
 #include <span>
 #include <vector>
 #include <boost/asio.hpp>
-#include <boost/container/vector.hpp>
 
 constexpr size_t BUFFER_SIZE = 1024;
 

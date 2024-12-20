@@ -32,7 +32,7 @@
     <ClInclude Include="backup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Make_Span.h">
+    <ClInclude Include="Span_Factory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
