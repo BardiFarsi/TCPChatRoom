@@ -12,11 +12,13 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#ifndef WIN32
+#define WIN32 0x0A00  
+#endif
+
 #if BOOST_VERSION < 108600
 #   error "This program need boost 1.86.0 or higher!"
 #endif
-
-
 
 namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
@@ -29,38 +31,42 @@ constexpr size_t BUFF_SIZE{ 1024 };
 
 int main(int argc, char* argv[]) {
 	try {
-		if (argc != 2) {
+		if (argc != 3) {
 			console.log("Invalid argument. Please provide a valid host.");
+			return 1;
 		}
 		else {
-			std::string serviceType{"getRequest"};
+			std::string host = argv[1];
+			std::string port = argv[2];
 			io_context io_context;
+			error_code ec; 
 			tcp::resolver resolver(io_context);
-			tcp::resolver::results_type endpoints = resolver.resolve("127.0.0.1:3000", "serviceType"); //argv[1]
+			tcp::resolver::results_type endpoints = resolver.resolve(host, port, ec);
 			tcpSocket socket(io_context);
-			connect(socket, endpoints);
-			while (true) {
-				std::vector<char> buffVec(BUFF_SIZE);
-				error_code ec; 
-				size_t length = socket.read_some(asio::buffer(buffVec), ec);
-				if (ec == asio::error::eof) {
-					break; 
-				} 
-				else if (ec) {
-					throw boost::system::system_error(ec);
+			connect(socket, endpoints, ec);
+			if (!ec) {
+				while (true) {
+					std::vector<char> buffVec(BUFF_SIZE);
+					size_t length = socket.read_some(asio::buffer(buffVec), ec);
+					if (ec == asio::error::eof) {
+						break; 
+					}
+					else if (ec) {
+						console.log("Unexpected error from error_code!", ec.what());
+						throw boost::system::system_error(ec);
+					}
+					else {
+						Span_Factory make_span;
+						std::span<std::byte> spanBuffer = make_span(buffVec);
+						Buffer_Sanitizer sanitizer;
+						std::string response = sanitizer(spanBuffer);
+						console.log("The response from span:", response);
+						
+					}
 				}
-				else {
-					Span_Factory make_span;
-					std::span<std::byte> buffSpan = make_span(buffVec);
-					asio::mutable_buffer mtBuffer(buffVec.data(), length); 
-					Buffer_Sanitizer sanitizer;
-					std::string responseMT = sanitizer(mtBuffer);
-					std::string responseSpan = sanitizer(buffSpan);
-					std::string responseVec = sanitizer(buffVec);
-					console.log("The response from Boost Mutable Obj:", responseMT);
-					console.log("The response from span:", responseSpan);
-					console.log("The response from Vector:", responseVec);
-				}
+			}
+			else {
+				console.log("Unexpected error from error_code!", ec.what());
 			}
 		}
 	}
