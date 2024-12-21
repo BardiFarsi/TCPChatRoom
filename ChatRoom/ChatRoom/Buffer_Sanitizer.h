@@ -10,7 +10,6 @@ constexpr size_t BUFFER_SIZE = 1024;
 
 class Buffer_Sanitizer {
 public:
-    
     template <typename T>
     std::string operator()(const T& container) const {
         // Special handling for boost::asio::mutable_buffer

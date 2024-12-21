@@ -8,14 +8,14 @@
 // Concept to validate types
 template <typename T>
 concept valid_type = std::same_as<T, char> ||
-std::same_as<T, unsigned char> ||
-std::same_as<T, std::byte>;
+                     std::same_as<T, unsigned char> ||
+                     std::same_as<T, std::byte>;
 
 template <typename T>
 concept valid_container = requires(T container) {
     { container.data() } -> std::convertible_to<void*>;
     { container.size() } -> std::convertible_to<std::size_t>;
-}&& valid_type<typename T::value_type>;
+} && valid_type<typename T::value_type>;
 
 class Span_Factory {
 public:
