@@ -58,7 +58,7 @@ public:
             else {
                 ss << "[Non - printable type] The memory address of the object is: " << &arg;
             }
-            ss << " ";
+            ss << ""; // In case if we need space
             };
 
         (argsHandler(args), ...);
