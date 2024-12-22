@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
 #include "Span_Factory.h"
@@ -17,8 +16,7 @@
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
 #include <nlohmann/json.hpp>
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+
 
 #ifndef WIN32
 #define WIN32 0x0A00  
@@ -33,12 +31,9 @@ using tcp = asio::ip::tcp;
 using io_context = asio::io_context;
 using error_code = boost::system::error_code;
 using resolver = tcp::resolver;
-using tcpSocket = tcp::socket;
 
 constexpr size_t BUFF_SIZE{ 1024 };
 std::mutex date_mtx;
-
-std::string reset_time();
 
 int main(int argc, char* argv[]) {
 	try {
@@ -48,14 +43,12 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			std::string host = argv[1];
-			std::string port = argv[2];
-			std::string dayTime = reset_time();
-			console.log(dayTime); 
+			std::string port = argv[2]; 
 			io_context io_context;
 			error_code ec; 
 			tcp::resolver resolver(io_context);
 			tcp::resolver::results_type endpoints = resolver.resolve(host, port, ec);
-			tcpSocket socket(io_context);
+			tcp::socket socket(io_context);
 			connect(socket, endpoints, ec);
 			if (!ec) {
 				while (true) {
@@ -88,30 +81,3 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
-
-std::string reset_time() {
-	try {
-		auto now = std::chrono::system_clock::now();
-		std::time_t time = std::chrono::system_clock::to_time_t(now);
-		std::tm localTime;
-		{
-			std::lock_guard<std::mutex> lock(date_mtx);
-			std::tm* LTPtr = std::localtime(&time);
-			if (!LTPtr) {
-				return "Error! std::localtime returned nullptr.";
-			} 
-			else {
-				localTime = *LTPtr;
-			}
-			std::stringstream ss;
-			ss << std::put_time(&localTime, "%a %b %d %H:%M:%S %Y");
-			return ss.str();
-		}
-	}
-	catch (const std::exception& e) { // for std::bad_alloc & etc
-		std::string err = "Caught error in time conversion: ";
-		err += e.what();
-		return err;
-	}
-}
-
