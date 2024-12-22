@@ -8,10 +8,10 @@
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140d.dll'. Symbol loading disabled by Include/Exclude setting.
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1d.dll'. Symbol loading disabled by Include/Exclude setting.
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ucrtbased.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 103388 has exited with code 0 (0x0).
+The thread 72276 has exited with code 0 (0x0).
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\mswsock.dll'. Symbol loading disabled by Include/Exclude setting.
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. Symbol loading disabled by Include/Exclude setting.
 'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\msvcrt.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 104372 has exited with code 0 (0x0).
-The thread 75680 has exited with code 0 (0x0).
-The program '[64456] ChatRoom.exe' has exited with code 0 (0x0).
+The thread 84860 has exited with code 0 (0x0).
+The thread 91944 has exited with code 0 (0x0).
+The program '[50280] ChatRoom.exe' has exited with code 0 (0x0).

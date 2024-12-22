@@ -86,8 +86,6 @@ int main(int argc, char* argv[]) {
 		console.log("Unexpected error! ", e.what());
 	}
 
-
-	
 	return 0;
 }
 
@@ -100,10 +98,9 @@ std::string reset_time() {
 			std::lock_guard<std::mutex> lock(date_mtx);
 			std::tm* LTPtr = std::localtime(&time);
 			if (!LTPtr) {
-				return "Error converting time";
+				return "Error! std::localtime returned nullptr.";
 			} 
-			else
-			{
+			else {
 				localTime = *LTPtr;
 			}
 			std::stringstream ss;
@@ -111,8 +108,8 @@ std::string reset_time() {
 			return ss.str();
 		}
 	}
-	catch (std::exception& e) {
-		std::string err = "Cought error in time converting! ";
+	catch (const std::exception& e) { // for std::bad_alloc & etc
+		std::string err = "Caught error in time conversion: ";
 		err += e.what();
 		return err;
 	}

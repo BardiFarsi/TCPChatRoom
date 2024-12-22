@@ -8,16 +8,11 @@
 #include<mutex>
 #include <type_traits>
 
-
 using std::cout;
 using std::cin;
 using std::endl;
 
 class LOGGER {
-private:
-    std::mutex mtx_;
-    std::stringstream ss_;
-
 public:
     LOGGER() = default;
     ~LOGGER() = default;
@@ -59,7 +54,7 @@ public:
                 ss_ << "[Non - printable type] The memory address of the object is: " << &arg;
             }
             ss_ << ""; // In case if we need space
-            };
+        };
 
         (argsHandler(args), ...);
 
@@ -70,6 +65,9 @@ public:
         ss_.clear();
     }
 
+private:
+    std::mutex mtx_;
+    std::stringstream ss_;
 };
 
 extern LOGGER console;
