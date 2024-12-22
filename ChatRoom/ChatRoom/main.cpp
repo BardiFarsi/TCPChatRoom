@@ -8,6 +8,8 @@
 #include <span>
 #include <concepts>
 #include <chrono>
+#include <mutex>
+#include <thread>
 #include <iomanip>
 #include <ctime>
 #include <iostream>
@@ -34,6 +36,7 @@ using resolver = tcp::resolver;
 using tcpSocket = tcp::socket;
 
 constexpr size_t BUFF_SIZE{ 1024 };
+std::mutex date_mtx;
 
 std::string reset_time();
 
@@ -92,13 +95,21 @@ std::string reset_time() {
 	try {
 		auto now = std::chrono::system_clock::now();
 		std::time_t time = std::chrono::system_clock::to_time_t(now);
-		std::tm* localTime = std::localtime(&time);
-		if (!localTime) {
-			return "Error converting time";
+		std::tm localTime;
+		{
+			std::lock_guard<std::mutex> lock(date_mtx);
+			std::tm* LTPtr = std::localtime(&time);
+			if (!LTPtr) {
+				return "Error converting time";
+			} 
+			else
+			{
+				localTime = *LTPtr;
+			}
+			std::stringstream ss;
+			ss << std::put_time(&localTime, "%a %b %d %H:%M:%S %Y");
+			return ss.str();
 		}
-		std::stringstream ss;
-		ss << std::put_time(localTime, "%a %b %d %H:%M:%S %Y");
-		return ss.str();
 	}
 	catch (std::exception& e) {
 		std::string err = "Cought error in time converting! ";

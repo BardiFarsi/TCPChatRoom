@@ -15,8 +15,8 @@ using std::endl;
 
 class LOGGER {
 private:
-    std::mutex mtx;
-    std::stringstream ss;
+    std::mutex mtx_;
+    std::stringstream ss_;
 
 public:
     LOGGER() = default;
@@ -38,36 +38,36 @@ public:
     // Args is a pack of types that can vary depending on the call to log().
     template<typename... Args>
     void log(const Args&... args) {
-        std::lock_guard<std::mutex> lock(mtx);
-        ss.str("");
-        ss.clear();
+        std::lock_guard<std::mutex> lock(mtx_);
+        ss_.str("");
+        ss_.clear();
 
         auto argsHandler = [this](const auto& arg) {
 
             using ArgType = std::decay_t<decltype(arg)>;
 
             if constexpr (std::is_same_v<ArgType, bool>) {
-                ss << (arg ? "true" : "false");
+                ss_ << (arg ? "true" : "false");
             }
             else if constexpr (std::is_same_v<ArgType, uint8_t>) {
-                ss << static_cast<int>(arg);
+                ss_ << static_cast<int>(arg);
             }
             else if constexpr (isPrintable<ArgType>) {
-                ss << arg;
+                ss_ << arg;
             }
             else {
-                ss << "[Non - printable type] The memory address of the object is: " << &arg;
+                ss_ << "[Non - printable type] The memory address of the object is: " << &arg;
             }
-            ss << ""; // In case if we need space
+            ss_ << ""; // In case if we need space
             };
 
         (argsHandler(args), ...);
 
-        std::string logMessage = ss.str();
+        std::string logMessage = ss_.str();
         if (!logMessage.empty()) {
             cout << logMessage << endl;
         }
-        ss.clear();
+        ss_.clear();
     }
 
 };

@@ -4,9 +4,11 @@
 #include <cctype>
 #include <span>
 #include <vector>
+#include <shared_mutex>
 #include <boost/asio.hpp>
 
 constexpr size_t BUFFER_SIZE = 1024;
+
 
 class Buffer_Sanitizer {
 public:
@@ -34,8 +36,14 @@ public:
     }
 
 private:
+    mutable std::shared_mutex containermtx_;
+    mutable std::shared_mutex boostMtMtx_;
     // Function to sanitize buffers for general containers like std::vector, std::span, etc.
     std::string sanitize_buffer(const char* buffer, size_t length) const {
+        std::shared_lock<std::shared_mutex> lock(containermtx_);
+        if (buffer == nullptr || length == 0) {
+            return "";
+        }
         std::string result;
         for (size_t i = 0; i < length; i++) {
             char ch = buffer[i];
@@ -48,6 +56,7 @@ private:
 
     // Function to sanitize boost::asio::mutable_buffer specifically
     std::string sanitize_buffer(const boost::asio::mutable_buffer& buffer) const {
+        std::shared_lock<std::shared_mutex> lock(boostMtMtx_);
         const char* data = static_cast<const char*>(buffer.data());
         size_t length = buffer.size();
 

@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <type_traits>
+#include <mutex>
 
 // Concept to validate types
 template <typename T>
@@ -22,6 +23,7 @@ public:
     // Operator() for containers like std::vector, std::array
     template <typename T>
     std::span<std::byte> operator()(T& container) requires valid_container<T> {
+        std::lock_guard<std::mutex> lock(containerMtx_);
         return std::span<std::byte>(
             reinterpret_cast<std::byte*>(container.data()),
             container.size()
@@ -31,10 +33,13 @@ public:
     // Operator() for raw arrays
     template <typename T, std::size_t N>
     std::span<std::byte> operator()(T(&array)[N]) requires valid_type<T> {
+        std::lock_guard<std::mutex> lock(rawMtx_);
         return std::span<std::byte>(
             reinterpret_cast<std::byte*>(array),
             N
         );
     }
-
+private:
+    std::mutex containerMtx_; 
+    std::mutex rawMtx_;
 };
