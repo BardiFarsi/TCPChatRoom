@@ -24,6 +24,7 @@
     <ProjectGuid>{55a2c8ec-d870-4f70-8685-5341d3c5e347}</ProjectGuid>
     <RootNamespace>HttpsServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TCPServer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
