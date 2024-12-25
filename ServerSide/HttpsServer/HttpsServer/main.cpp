@@ -28,12 +28,14 @@ using io_context = asio::io_context;
 using error_code = boost::system::error_code;
 using resolver = tcp::resolver;
 
+constexpr short DEFAULT_PORT = 3000;
+
 int main() {
 	try {
 		io_context io_context_v4;
 		io_context io_context_v6;
-		TCP_Server server_IPV4(io_context_v4, 3000);
-		TCP_Server server_IPV6(io_context_v6, 3000);
+		TCP_Server server_IPV4(io_context_v4, DEFAULT_PORT);
+		TCP_Server server_IPV6(io_context_v6, DEFAULT_PORT);
 		std::jthread t_v4([&io_context_v4]() { io_context_v4.run(); });
 		std::jthread t_v6([&io_context_v6]() { io_context_v6.run(); });
 	}

@@ -11,7 +11,6 @@ tcp::socket& TCP_Connection::socket() {
 	return socket_; 
 }
 
-
 void TCP_Connection::start() {
 	message_.clear();
 	message_ = response();
