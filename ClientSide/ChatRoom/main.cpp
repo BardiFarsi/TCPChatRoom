@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 			std::string port = argv[2]; 
 			io_context io_context;
 			error_code ec; 
-			tcp::resolver resolver(io_context);
+			tcp::resolver resolver(io_context); 
 			tcp::resolver::results_type endpoints = resolver.resolve(host, port, ec);
 			tcp::socket socket(io_context);
 			connect(socket, endpoints, ec);

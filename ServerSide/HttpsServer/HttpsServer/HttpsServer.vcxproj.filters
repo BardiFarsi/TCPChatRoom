@@ -21,15 +21,21 @@
     <ClCompile Include="LOGGER.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TCP_Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TCP_Connection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LOGGER.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Span_Factory.h">
+    <ClInclude Include="TCP_Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Buffer_Sanitizer.h">
+    <ClInclude Include="TCP_Connection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

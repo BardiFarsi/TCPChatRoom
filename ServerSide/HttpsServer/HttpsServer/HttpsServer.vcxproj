@@ -137,11 +137,13 @@
   <ItemGroup>
     <ClCompile Include="LOGGER.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TCP_Connection.cpp" />
+    <ClCompile Include="TCP_Server.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Buffer_Sanitizer.h" />
-    <ClInclude Include="Span_Factory.h" />
     <ClInclude Include="LOGGER.h" />
+    <ClInclude Include="TCP_Connection.h" />
+    <ClInclude Include="TCP_Server.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
