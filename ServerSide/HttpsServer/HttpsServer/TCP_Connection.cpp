@@ -1,22 +1,23 @@
 #include "TCP_Connection.h"
-TCP_Connection::TCP_Connection(io_context& io_context) : 
+TCP_Connection::TCP_Connection(io_context& io_context) :
 	socket_(io_context),
-	strand_(io_context.get_executor()) {}
+	strand_(asio::make_strand(io_context)) {
+}
 
 std::shared_ptr<TCP_Connection> TCP_Connection::create(io_context& io_context) {
 	return std::make_shared<TCP_Connection>(io_context);
 }
 
 tcp::socket& TCP_Connection::socket() {
-	return socket_; 
+	return socket_;
 }
 
 void TCP_Connection::start() {
 	message_.clear();
 	message_ = response();
 	asio::async_write(socket_, asio::buffer(message_),
-		asio::bind_executor(strand_, 
-			std::bind(&TCP_Connection::handle_write, shared_from_this(), 
+		asio::bind_executor(strand_,
+			std::bind(&TCP_Connection::handle_write, shared_from_this(),
 				asio::placeholders::error, asio::placeholders::bytes_transferred)));
 }
 

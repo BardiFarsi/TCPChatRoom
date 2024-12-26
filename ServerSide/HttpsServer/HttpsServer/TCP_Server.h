@@ -10,8 +10,8 @@ using error_code = boost::system::error_code;
 
 class TCP_Server
 {
-public: 
-	TCP_Server(io_context& io_context, short port);
+public:
+	TCP_Server(io_context& io_context, const unsigned short port);
 	~TCP_Server() = default;
 private:
 	io_context& io_context_;
@@ -24,4 +24,3 @@ private:
 	void handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec);
 	void handle_accept_v6(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec);
 };
-

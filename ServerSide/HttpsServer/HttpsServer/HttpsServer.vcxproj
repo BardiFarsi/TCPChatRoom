@@ -142,6 +142,7 @@
     <ClCompile Include="TCP_Server.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="backup.h" />
     <ClInclude Include="LOGGER.h" />
     <ClInclude Include="TCP_Connection.h" />
     <ClInclude Include="TCP_Server.h" />

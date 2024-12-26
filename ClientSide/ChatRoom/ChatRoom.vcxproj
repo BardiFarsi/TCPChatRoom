@@ -24,7 +24,7 @@
     <ProjectGuid>{c9326c99-93fe-434b-862b-d80d99aa4dd7}</ProjectGuid>
     <RootNamespace>ChatRoom</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>HttpsClientSide</ProjectName>
+    <ProjectName>TCPClientSide</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

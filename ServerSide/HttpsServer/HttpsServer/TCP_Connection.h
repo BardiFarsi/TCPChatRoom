@@ -18,7 +18,7 @@ class TCP_Connection : public std::enable_shared_from_this<TCP_Connection>
 {
 public:
 	TCP_Connection(io_context& io_context);
-	~TCP_Connection() = default; 
+	~TCP_Connection() = default;
 	static std::shared_ptr<TCP_Connection> create(io_context& io_context);
 	tcp::socket& socket();
 	void start();
@@ -32,4 +32,3 @@ private:
 	std::string message_;
 	asio::strand<io_context::executor_type> strand_;
 };
-
