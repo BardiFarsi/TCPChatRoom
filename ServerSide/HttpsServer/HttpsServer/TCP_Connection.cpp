@@ -1,7 +1,9 @@
 #include "TCP_Connection.h"
+
 TCP_Connection::TCP_Connection(io_context& io_context) :
 	socket_(io_context),
 	strand_(asio::make_strand(io_context)) {
+	data_;
 }
 
 std::shared_ptr<TCP_Connection> TCP_Connection::create(io_context& io_context) {
@@ -19,6 +21,7 @@ void TCP_Connection::start() {
 		asio::bind_executor(strand_,
 			std::bind(&TCP_Connection::handle_write, shared_from_this(),
 				asio::placeholders::error, asio::placeholders::bytes_transferred)));
+	do_read();
 }
 
 void TCP_Connection::handle_write(const error_code& ec, size_t bytes_transferred) {
@@ -64,4 +67,40 @@ std::string TCP_Connection::response() {
 	std::string response = set_time();
 	response += "\n Received your request!";
 	return response;
+}
+
+void TCP_Connection::send_message(const std::string& message) {
+    // Perform the asynchronous write operation
+    asio::async_write(socket_, asio::buffer(message),
+        asio::bind_executor(strand_,
+            std::bind(&TCP_Connection::handle_write, shared_from_this(),
+                asio::placeholders::error, asio::placeholders::bytes_transferred)
+        )
+    );
+}
+
+
+
+void TCP_Connection::set_partner(std::shared_ptr<TCP_Connection> partner) {
+	partner_ = partner;
+}
+
+void TCP_Connection::do_read() {
+	asio::async_read(socket_, asio::buffer(data_));
+	asio::bind_executor(strand_,
+		[this](const error_code& ec, size_t bytes_transferred) {
+			if (ec) {
+				console.log("Error reading data: ", ec.what());
+			}
+			else {
+				std::string message(data_.data(), bytes_transferred);
+				console.log("Received: ", set_time(), message);
+				if (partner_) {
+					partner_->send_message(message);
+				}
+				do_read();
+			}
+		}
+	
+	);
 }
