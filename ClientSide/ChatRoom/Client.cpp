@@ -1,53 +1,41 @@
-#include "TCP_Connection.h"
-TCP_Connection::TCP_Connection(io_context& io_context, TCP_Server& server) :
-	socket_(io_context),
-	strand_(asio::make_strand(io_context)),
-	server_(server)
-{
-	otherUser_ = nullptr; 
-	running_ = true; 
-}
+#include "Client.h"
 
-TCP_Connection::~TCP_Connection() {
+
+Client::Client(asio::io_context& io_context) : 
+    io_context_(io_context), 
+	socket_(io_context),
+    strand_(io_context.get_executor()), 
+    running_(true) {}
+
+Client::~Client() {
 	stop();
 }
 
-std::shared_ptr<TCP_Connection> TCP_Connection::create(io_context& io_context, TCP_Server& server) {
-	return std::make_shared<TCP_Connection>(io_context, server);
+void Client::connect(const std::string& host, const std::string& port) {
+	resolver resolver(io_context_);
+	auto endpoints = resolver.resolve(host, port);
+	asio::async_connect(socket_, endpoints,
+		asio::bind_executor(strand_,
+			[this](const error_code& ec, const tcp::endpoint& endpoint) {
+				if (!ec) {
+					console.log("Connected to ", endpoint.address().to_string());
+					start();
+				}
+				else {
+					console.log("Connection error: ", ec.message());
+					running_ = false;
+				}
+			}
+		)
+	);
 }
 
-tcp::socket& TCP_Connection::socket() {
-	return socket_;
-}
-
-void TCP_Connection::start() {
-	{
-		std::lock_guard<std::mutex> lock(write_mtx_);
-		message_.clear();
-		message_ = response(); 
-		writeData_.clear();
-		writeData_.resize(message_.size());
-		std::copy(message_.begin(), message_.end(), writeData_.begin());
-	}
-	error_code ec;
-	if (!ec) {
-	asio::write(socket_, asio::buffer(message_), ec);
-	handle_communication();
-	}
-}
-
-void TCP_Connection::handle_communication() {
-	console.log("One user joined the chat!");
+void Client::start() {
 	read_thread_ = std::thread([this]() { do_read(); });
-	write_thread_ = std::thread([this]() { do_write(); });
+	write_thread_ =	std::thread([this]() { do_write(); });
 }
 
-void TCP_Connection::set_partner(TCP_Connection* otherUser) {
-	otherUser_= otherUser;
-	do_read();
-}
-
-void TCP_Connection::do_read() {
+void Client::do_read() {
 	while (running_) {
 		readData_.clear();
 		readData_.resize(BUFF_SIZE);
@@ -55,10 +43,12 @@ void TCP_Connection::do_read() {
 		size_t length = socket_.read_some(asio::buffer(readData_), ec);
 		if (!ec) {
 			std::lock_guard<std::mutex> lock(read_mtx_);
+			Span_Factory make_span;
 			Buffer_Sanitizer sanitizer;
-			std::string response = sanitizer(readData_);
+			std::span<std::byte> readSpan = make_span(readData_);
+			std::string response = sanitizer(readSpan);
 			if (response == "Exit++") {
-				console.log("The client exit the chat");
+				console.log("The other user exit the chatroom");
 				running_ = false;
 				break;
 			}
@@ -76,7 +66,7 @@ void TCP_Connection::do_read() {
 	}
 }
 
-void TCP_Connection::do_write() {
+void Client::do_write() {
 	while (running_) {
 		{
 			std::lock_guard<std::mutex> lock(write_mtx_);
@@ -84,7 +74,7 @@ void TCP_Connection::do_write() {
 			console.log("Type your message: ");
 			std::getline(cin, message_);
 			if (message_ == "Exit++") {
-				console.log("Server is going to close the connection!");
+				console.log("You are about to exit the chatroom!");
 				writeData_.clear();
 				writeData_.resize(message_.size());
 				std::copy(message_.begin(), message_.end(), writeData_.begin());
@@ -95,7 +85,7 @@ void TCP_Connection::do_write() {
 			writeData_.resize(message_.size());
 			std::copy(message_.begin(), message_.end(), writeData_.begin());
 		}
-		error_code ec;
+		error_code ec; 
 		if (!ec) {
 			asio::write(socket_, asio::buffer(writeData_), ec);
 		}
@@ -107,16 +97,13 @@ void TCP_Connection::do_write() {
 	}
 }
 
-void TCP_Connection::stop() {
+void Client::stop() {
 	running_ = false;
 	if (read_thread_.joinable()) read_thread_.join();
 	if (write_thread_.joinable()) write_thread_.join();
-	server_.remove_connection(shared_from_this());
 }
 
-
-
-std::string TCP_Connection::set_time() {
+std::string Client::set_time() {
 	try {
 		auto now = std::chrono::system_clock::now();
 		std::time_t time = std::chrono::system_clock::to_time_t(now);
@@ -138,11 +125,12 @@ std::string TCP_Connection::set_time() {
 	catch (const std::exception& e) { // for std::bad_alloc & etc
 		std::string err = "Caught error in time conversion: ";
 		err += e.what();
+		running_ = false;
 		return err;
 	}
 }
 
-std::string TCP_Connection::response() {
+std::string Client::response() {
 	std::lock_guard<std::mutex> lock(response_mtx_);
 	std::string response = set_time();
 	response += "\n Received your request!";

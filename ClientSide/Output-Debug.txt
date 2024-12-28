@@ -1,17 +1,25 @@
-﻿'ChatRoom.exe' (Win32): Loaded 'C:\Users\farsi\source\CommunicationProtocols\TCPChatroom\ClientSide\x64\Debug\ChatRoom.exe'. Symbols loaded.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ntdll.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\kernel32.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\KernelBase.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ws2_32.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\rpcrt4.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\msvcp140d.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140d.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1d.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\ucrtbased.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 110868 has exited with code 0 (0x0).
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\mswsock.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. Symbol loading disabled by Include/Exclude setting.
-'ChatRoom.exe' (Win32): Loaded 'C:\Windows\System32\msvcrt.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 98264 has exited with code 0 (0x0).
-The thread 102040 has exited with code 0 (0x0).
-The program '[98224] ChatRoom.exe' has exited with code 0 (0x0).
+﻿'TCPClientSide.exe' (Win32): Loaded 'C:\Users\farsi\source\CommunicationProtocols\TCPChatroom\ClientSide\x64\Debug\TCPClientSide.exe'. Symbols loaded.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\ntdll.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\kernel32.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\KernelBase.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\ws2_32.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\rpcrt4.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\msvcp140d.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\msvcp140d_atomic_wait.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\advapi32.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\msvcrt.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\sechost.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\bcrypt.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140d.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1d.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\ucrtbased.dll'. Symbol loading disabled by Include/Exclude setting.
+The thread 164988 has exited with code 0 (0x0).
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\mswsock.dll'. Symbol loading disabled by Include/Exclude setting.
+'TCPClientSide.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. Symbol loading disabled by Include/Exclude setting.
+The thread 173324 has exited with code 0 (0x0).
+The thread 176096 has exited with code 3221225786 (0xc000013a).
+The thread 163532 has exited with code 3221225786 (0xc000013a).
+The thread 135956 has exited with code 3221225786 (0xc000013a).
+The thread 160168 has exited with code 3221225786 (0xc000013a).
+The thread 160212 has exited with code 3221225786 (0xc000013a).
+The program '[169952] TCPClientSide.exe' has exited with code 3221225786 (0xc000013a).

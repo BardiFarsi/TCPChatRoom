@@ -132,12 +132,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Client.cpp" />
     <ClCompile Include="LOGGER.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Buffer_Sanitizer.h" />
     <ClInclude Include="backup.h" />
+    <ClInclude Include="Client.h" />
     <ClInclude Include="LOGGER.h" />
     <ClInclude Include="Span_Factory.h" />
   </ItemGroup>

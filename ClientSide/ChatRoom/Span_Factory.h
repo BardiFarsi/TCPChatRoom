@@ -5,6 +5,8 @@
 #include <array>
 #include <type_traits>
 #include <mutex>
+#include <span>
+#include "Client.h"
 
 // Concept to validate types
 template <typename T>

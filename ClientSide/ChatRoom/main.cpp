@@ -1,22 +1,14 @@
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
 #include "Span_Factory.h"
-#include <vector>
+#include "Client.h"
 #include <exception>
 #include <string>
-#include <span>
-#include <concepts>
 #include <chrono>
 #include <mutex>
 #include <thread>
-#include <iomanip>
-#include <ctime>
-#include <iostream>
-#include <sstream>
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
-#include <nlohmann/json.hpp>
-
 
 #ifndef WIN32
 #define WIN32 0x0A00  
@@ -29,54 +21,42 @@
 namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
 using io_context = asio::io_context;
-using error_code = boost::system::error_code;
-using resolver = tcp::resolver;
 
-constexpr size_t BUFF_SIZE{ 1024 };
-std::mutex date_mtx;
+using std::cin;
 
-int main(int argc, char* argv[]) {
+static std::string HOST { "127.0.0.1" }; 
+static std::string PORT { "3000" };
+
+int main() {
+	console.log("Welcome to bare-metal chat.");
+	console.log("In a moment you will be connected to server and may be able to chat to your partner.");
+	console.log("To exit the program please enter 'Exit++'.");
+	
+	// To define the Host and Port on run time, uncomment the code below.
+	/*
+	console.log("Enter the Host you want to connect: ");
+	cin >> HOST;
+	console.log("Enter the Port for the service type you would like to connect: ");
+	cin >> PORT;
+	console.log("Connecting to the Host: ", HOST, " and the Port: ", PORT);
+	*/
+
 	try {
-		if (argc != 3) {
-			console.log("Invalid argument. Please provide a valid host.");
-			return 1;
-		}
-		else {
-			std::string host = argv[1];
-			std::string port = argv[2]; 
-			io_context io_context;
-			error_code ec; 
-			tcp::resolver resolver(io_context); 
-			tcp::resolver::results_type endpoints = resolver.resolve(host, port, ec);
-			tcp::socket socket(io_context);
-			connect(socket, endpoints, ec);
-			if (!ec) {
-				while (true) {
-					std::vector<char> buffVec(BUFF_SIZE);
-					size_t length = socket.read_some(asio::buffer(buffVec), ec);
-					if (ec == asio::error::eof) {
-						break; 
-					}
-					else if (ec) {
-						console.log("Unexpected error from error_code! ", ec.what());
-						throw boost::system::system_error(ec);
-					}
-					else {
-						Span_Factory make_span;
-						std::span<std::byte> spanBuffer = make_span(buffVec);
-						Buffer_Sanitizer sanitizer;
-						std::string response = sanitizer(spanBuffer);
-						console.log("The response from span: ", response);
-					}
-				}
-			}
-			else {
-				console.log("Unexpected error from error_code! ", ec.what());
-			}
-		}
+		io_context io_context;
+		asio::executor_work_guard<io_context::executor_type>work_guard(io_context.get_executor());
+		tcp::socket socket(io_context);
+		Client client(io_context);
+		client.connect(HOST, PORT);
+
+		std::jthread io_thread([&io_context]() {
+			io_context.run();
+			});
+		io_thread.join();
+		client.stop(); 
 	}
 	catch (const std::exception& e) {
 		console.log("Unexpected error! ", e.what());
+		return 1;
 	}
 
 	return 0;
