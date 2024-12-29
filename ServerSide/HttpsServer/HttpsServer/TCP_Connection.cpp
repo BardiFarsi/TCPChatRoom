@@ -70,6 +70,9 @@ void TCP_Connection::do_read() {
 
                             if (response == "Exit++") {
                                 console.log("The client exit the chat");
+                                response.clear();
+                                response = "A user is leaving the chatroom!";
+                                server_.broadcast_message(response, shared_from_this());
                                 running_.store(false, std::memory_order_release);
                                 break;
                             }

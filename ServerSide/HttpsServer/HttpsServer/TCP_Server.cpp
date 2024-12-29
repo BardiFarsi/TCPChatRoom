@@ -40,7 +40,6 @@ void TCP_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection,
 
 void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
 	std::unique_lock<std::mutex> lock(connections_mtx_);
-	lock.lock();
 	auto it = std::find(active_connections_.begin(), active_connections_.end(), connection);
 
 	if (it != active_connections_.end()) {
