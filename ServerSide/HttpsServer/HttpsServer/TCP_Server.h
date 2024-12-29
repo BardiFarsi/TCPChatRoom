@@ -53,12 +53,12 @@ public:
 	template<Message T>
 		requires Message<T>
 	auto broadcast_message(T& message, std::shared_ptr<TCP_Connection> sender) 
-		-> std::enable_if_t<has_data_method<T>::value&& has_size_method<T>::value, void> {
+		-> std::enable_if_t<has_data_method<T>::value && has_size_method<T>::value, void> {
 		static_assert(has_data_method<T>::value,
 			"Type must have a data() method");
 		static_assert(has_size_method<T>::value,
 			"Type must have a size() method");
-		std::lock_guard<std::mutex> lock(connections_mutex_);
+		std::lock_guard<std::mutex> lock(connections_mtx_);
 		std::span<const std::byte> bytes = Span_Factory()(message);
 		std::string broadcast_str(
 			reinterpret_cast<const char*>(bytes.data()),
@@ -90,5 +90,5 @@ private:
 	void start_accept_v4();
 	void handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec);
 	std::vector<std::shared_ptr<TCP_Connection>> active_connections_;
-	std::mutex connections_mutex_;
+	std::mutex connections_mtx_;
 };

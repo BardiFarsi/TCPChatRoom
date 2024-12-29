@@ -9,7 +9,7 @@ TCP_Server::TCP_Server(io_context& io_context, const unsigned short port) :
 }
 
 TCP_Server::~TCP_Server() {
-	std::lock_guard<std::mutex> lock(connections_mutex_);
+	std::lock_guard<std::mutex> lock(connections_mtx_);
 	for (auto& connection : active_connections_) {
 		connection->stop();
 	}
@@ -27,7 +27,7 @@ void TCP_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection,
 		console.log("Connection from IPv4 accepted.");
 		std::string message;
 		{
-			std::lock_guard<std::mutex> lock(connections_mutex_);
+			std::lock_guard<std::mutex> lock(connections_mtx_);
 			active_connections_.push_back(newConnection);
 			message = " New user joined the chat room. Total users: " +
 				std::to_string(active_connections_.size());
@@ -39,10 +39,12 @@ void TCP_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection,
 
 
 void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
-	std::lock_guard<std::mutex> lock(connections_mutex_);
+	std::unique_lock<std::mutex> lock(connections_mtx_);
+	lock.lock();
 	auto it = std::find(active_connections_.begin(), active_connections_.end(), connection);
 
 	if (it != active_connections_.end()) {
 		active_connections_.erase(it);
 	}
+	lock.unlock();
 }

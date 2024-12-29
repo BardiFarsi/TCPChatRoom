@@ -7,6 +7,7 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <atomic>
 #include <iomanip>
 #include <ctime>
 #include <functional>
@@ -35,6 +36,7 @@ public:
 
 private:
 	void handle_communication();
+	void stop_process();
 	std::string set_time();
 	std::string response();
 	TCP_Server& server_;
@@ -42,16 +44,17 @@ private:
 	error_code ec_;
 	asio::strand<io_context::executor_type> strand_;
 	TCP_Connection* otherUser_;
-	bool running_; 
+	std::atomic<bool> running_;
+	std::once_flag stop_flag_;
 	std::mutex date_mtx_;
 	std::mutex response_mtx_;
 	std::mutex read_mtx_;
 	std::mutex write_mtx_;
+	std::mutex stop_mtx_;
 	std::thread read_thread_;
 	std::thread write_thread_;
 	std::string userId_;
 	std::string message_;
-
 	std::vector<char> readData_;
 	std::vector<char> writeData_;
 };

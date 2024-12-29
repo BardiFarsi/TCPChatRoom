@@ -22,6 +22,7 @@ namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
 using io_context = asio::io_context;
 
+// Fof the comment section below
 using std::cin;
 
 static std::string HOST { "127.0.0.1" }; 
@@ -46,7 +47,6 @@ int main() {
 		asio::executor_work_guard<io_context::executor_type>work_guard(io_context.get_executor());
 		tcp::socket socket(io_context);
 		Client client(io_context);
-
 		client.connect(HOST, PORT);
 
 		std::jthread io_thread([&io_context]() {
