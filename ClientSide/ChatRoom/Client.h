@@ -43,6 +43,8 @@ private:
     asio::io_context& io_context_;
     asio::strand<asio::io_context::executor_type> strand_;
     std::string message_;
+    std::string userInput_;
+    std::string username_;
     std::vector<char> writeData_;
     std::vector<char> readData_;
     bool running_;
@@ -50,6 +52,7 @@ private:
     std::mutex date_mtx_;
     std::mutex read_mtx_;
     std::mutex response_mtx_;
+    std::mutex start_mtx_;
     std::thread read_thread_;
     std::thread write_thread_;
 };

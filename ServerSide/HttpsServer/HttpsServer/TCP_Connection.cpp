@@ -1,4 +1,5 @@
 #include "TCP_Connection.h"
+
 TCP_Connection::TCP_Connection(io_context& io_context, TCP_Server& server) :
 	socket_(io_context),
 	strand_(asio::make_strand(io_context)),
@@ -20,11 +21,12 @@ tcp::socket& TCP_Connection::socket() {
 	return socket_;
 }
 
-void TCP_Connection::start() {
+void TCP_Connection::start(const std::string& message) {
 	{
 		std::lock_guard<std::mutex> lock(write_mtx_);
 		message_.clear();
 		message_ = response(); 
+		message_ += message;
 		writeData_.clear();
 		writeData_.resize(message_.size());
 		std::copy(message_.begin(), message_.end(), writeData_.begin());
@@ -39,12 +41,7 @@ void TCP_Connection::start() {
 void TCP_Connection::handle_communication() {
 	console.log("One user joined the chat!");
 	read_thread_ = std::thread([this]() { do_read(); });
-	write_thread_ = std::thread([this]() { do_write(); });
-}
-
-void TCP_Connection::set_partner(TCP_Connection* otherUser) {
-	otherUser_= otherUser;
-	do_read();
+	write_thread_ = std::thread([this]() { do_write(""); });
 }
 
 void TCP_Connection::do_read() {
@@ -62,21 +59,24 @@ void TCP_Connection::do_read() {
 				running_ = false;
 				break;
 			}
+			server_.broadcast_message(readData_, shared_from_this());
 			console.log(response);
 			readData_.clear();
 		}
-		else if (ec == asio::error::eof) {
-			console.log("Connection closed by server!");
+		else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
+			console.log("Client disconnected!");
 			running_ = false;
+			break;
 		}
 		else {
 			console.log("Read error: ", ec.message());
 			running_ = false;
+			break;
 		}
 	}
 }
 
-void TCP_Connection::do_write() {
+void TCP_Connection::do_write(const std::string& message) {
 	while (running_) {
 		{
 			std::lock_guard<std::mutex> lock(write_mtx_);
@@ -85,9 +85,12 @@ void TCP_Connection::do_write() {
 			std::getline(cin, message_);
 			if (message_ == "Exit++") {
 				console.log("Server is going to close the connection!");
+				message_.clear();
+				message_ = "User is leaving the chat! ";
 				writeData_.clear();
 				writeData_.resize(message_.size());
 				std::copy(message_.begin(), message_.end(), writeData_.begin());
+				server_.broadcast_message(writeData_, shared_from_this());
 				running_ = false;
 				break;
 			}
@@ -97,7 +100,7 @@ void TCP_Connection::do_write() {
 		}
 		error_code ec;
 		if (!ec) {
-			asio::write(socket_, asio::buffer(writeData_), ec);
+			server_.broadcast_message(writeData_, nullptr);
 		}
 		else {
 			console.log("Write error: ", ec.message());
@@ -109,12 +112,19 @@ void TCP_Connection::do_write() {
 
 void TCP_Connection::stop() {
 	running_ = false;
+	try {
+		error_code ec;
+		socket_.shutdown(tcp::socket::shutdown_both, ec);
+		socket_.close(ec);
+	}
+	catch (const std::exception& e) {
+		console.log("Error during socket cleanup: ", e.what());
+	}
+
 	if (read_thread_.joinable()) read_thread_.join();
 	if (write_thread_.joinable()) write_thread_.join();
 	server_.remove_connection(shared_from_this());
 }
-
-
 
 std::string TCP_Connection::set_time() {
 	try {

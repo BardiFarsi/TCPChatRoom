@@ -3,13 +3,7 @@
 #include "TCP_Connection.h"
 #include <exception>
 #include <string>
-#include <concepts>
-#include <memory>
-#include <chrono>
-#include <mutex>
 #include <thread>
-#include <iomanip>
-#include <ctime>
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
 #include <nlohmann/json.hpp>
@@ -33,7 +27,6 @@ constexpr unsigned short DEFAULT_PORT = 3000;
 int main() {
 	try {
 		io_context io_context;
-		
 		TCP_Server server(io_context, DEFAULT_PORT);
 		std::jthread t_TCP([&io_context]() { io_context.run(); });
 	}

@@ -4,6 +4,7 @@ TCP_Server::TCP_Server(io_context& io_context, const unsigned short port) :
 	io_context_(io_context),
 	acceptor_v4_(io_context, tcp::endpoint(tcp::v4(), port))
 {
+	console.log("Server starts running");
 	start_accept_v4();
 }
 
@@ -24,32 +25,24 @@ void TCP_Server::start_accept_v4() {
 void TCP_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec) {
 	if (!ec) {
 		console.log("Connection from IPv4 accepted.");
+		std::string message;
 		{
 			std::lock_guard<std::mutex> lock(connections_mutex_);
 			active_connections_.push_back(newConnection);
+			message = " New user joined the chat room. Total users: " +
+				std::to_string(active_connections_.size());
 		}
-		newConnection->start();
+		newConnection->start(message);
 	}
 	start_accept_v4();
 }
 
-void TCP_Server::handle_new_connection(std::shared_ptr<TCP_Connection>& newConnection) {
-	console.log("New connection accepted");
-	active_connections_.push_back(newConnection);
-	if (active_connections_.size() >= 2) {
-		auto& user1 = active_connections_[0];
-		auto& user2 = active_connections_.back();
-
-		user1->set_partner(user2.get());
-		user2->set_partner(user1.get());
-	}
-	console.log("Chat session started between two users");
-}
 
 void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
 	std::lock_guard<std::mutex> lock(connections_mutex_);
-	active_connections_.erase(
-		std::remove(active_connections_.begin(), active_connections_.end(), connection),
-		active_connections_.end()
-	);
+	auto it = std::find(active_connections_.begin(), active_connections_.end(), connection);
+
+	if (it != active_connections_.end()) {
+		active_connections_.erase(it);
+	}
 }

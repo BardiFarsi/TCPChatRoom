@@ -44,5 +44,8 @@
     <ClInclude Include="Buffer_Sanitizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Span_Factory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

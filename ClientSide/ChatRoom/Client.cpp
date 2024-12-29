@@ -23,7 +23,7 @@ void Client::connect(const std::string& host, const std::string& port) {
 				}
 				else {
 					console.log("Connection error: ", ec.message());
-					running_ = false;
+					stop();
 				}
 			}
 		)
@@ -32,75 +32,199 @@ void Client::connect(const std::string& host, const std::string& port) {
 
 void Client::start() {
 	read_thread_ = std::thread([this]() { do_read(); });
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	write_thread_ =	std::thread([this]() { do_write(); });
 }
 
 void Client::do_read() {
-	while (running_) {
-		readData_.clear();
-		readData_.resize(BUFF_SIZE);
+	try {
 		error_code ec;
-		size_t length = socket_.read_some(asio::buffer(readData_), ec);
 		if (!ec) {
-			std::lock_guard<std::mutex> lock(read_mtx_);
-			Span_Factory make_span;
-			Buffer_Sanitizer sanitizer;
-			std::span<std::byte> readSpan = make_span(readData_);
-			std::string response = sanitizer(readSpan);
-			if (response == "Exit++") {
-				console.log("The other user exit the chatroom");
-				running_ = false;
-				break;
+			while (running_) {
+				try {
+					if (!ec) {
+						readData_.clear();
+						readData_.resize(BUFF_SIZE);
+						size_t length = socket_.read_some(asio::buffer(readData_), ec);
+					}
+					else if (ec == asio::error::eof) {
+						console.log("Connection closed by server!");
+						running_ = false;
+						break;
+					}
+					else {
+						console.log("Read error: ", ec.message());
+						running_ = false;
+						break;
+					}
+
+					if (!ec) {
+						std::lock_guard<std::mutex> lock(read_mtx_);
+						Span_Factory make_span;
+						Buffer_Sanitizer sanitizer;
+						std::span<std::byte> readSpan = make_span(readData_);
+						std::string response = sanitizer(readSpan);
+
+						if (response == "Exit++") {
+							console.log("The other user exit the chatroom");
+						}
+						console.log(response);
+						readData_.clear();
+					}
+					else if (ec == asio::error::eof) {
+						console.log("Connection closed by server!");
+						running_ = false;
+						break;
+					}
+					else {
+						console.log("Read error: ", ec.message());
+						running_ = false;
+						break;
+					}
+				}
+				catch (const std::bad_alloc& e) {
+					console.log("Memory allocation failed: ", e.what());
+					running_ = false;
+					break;
+				}
+				catch (const std::system_error& e) {
+					console.log("System error: ", e.what());
+					running_ = false;
+					break;
+				}
 			}
-			console.log(response);
-			readData_.clear();
-		}
-		else if (ec == asio::error::eof) {
-			console.log("Connection closed by server!");
-			running_ = false;
 		}
 		else {
 			console.log("Read error: ", ec.message());
 			running_ = false;
 		}
 	}
+	catch (const std::exception& e) {
+		console.log("Unexpected error in read loop: ", e.what());
+		running_ = false;
+	}
 }
 
 void Client::do_write() {
-	while (running_) {
-		{
-			std::lock_guard<std::mutex> lock(write_mtx_);
-			message_.clear();
-			console.log("Type your message: ");
-			std::getline(cin, message_);
-			if (message_ == "Exit++") {
-				console.log("You are about to exit the chatroom!");
-				writeData_.clear();
-				writeData_.resize(message_.size());
-				std::copy(message_.begin(), message_.end(), writeData_.begin());
-				running_ = false;
-				break;
-			}
-			writeData_.clear();
-			writeData_.resize(message_.size());
-			std::copy(message_.begin(), message_.end(), writeData_.begin());
-		}
-		error_code ec; 
+	try {
+		error_code ec;
 		if (!ec) {
-			asio::write(socket_, asio::buffer(writeData_), ec);
+			while (running_) {
+				try {
+					if (!ec) {
+						std::lock_guard<std::mutex> lock(write_mtx_);
+						message_.clear();
+
+						if (userInput_.empty() && username_.empty()) {
+							console.log("What is your name?");
+							std::getline(std::cin, username_);
+							username_ += ": ";
+						}
+
+						if (!username_.empty()) {
+							console.log("Type your message: ");
+							std::getline(cin, userInput_);
+						}
+
+						if (userInput_ == "Exit++") {
+							console.log("You are about to exit the chatroom!");
+							writeData_.clear();
+							writeData_.resize(userInput_.size());
+							std::copy(userInput_.begin(), userInput_.end(), writeData_.begin());
+							if (!ec) {
+								asio::write(socket_, asio::buffer(writeData_), ec);
+							}
+							else if (ec == asio::error::eof) {
+								console.log("Connection closed by server!");
+								running_ = false;
+								break;
+							}
+							else {
+								console.log("Read error: ", ec.message());
+								stop();
+								break;
+							}
+							running_ = false;
+							break;
+						}
+
+						message_ += username_;
+						message_ += userInput_;
+						writeData_.clear();
+						writeData_.resize(message_.size());
+						std::copy(message_.begin(), message_.end(), writeData_.begin());
+
+						if (!ec) {
+							asio::write(socket_, asio::buffer(writeData_), ec);
+						}
+						else if (ec == asio::error::eof) {
+							console.log("Connection closed by server!");
+							running_ = false;
+							break;
+						}
+						else {
+							console.log("Write error: ", ec.message());
+							running_ = false;
+							break;
+						}
+					}
+					else if (ec == asio::error::eof) {
+						console.log("Connection closed by server!");
+						running_ = false;
+						break;
+					}
+					else {
+						console.log("Read error: ", ec.message());
+						running_ = false;
+						break;
+					}
+				}
+				catch (const std::bad_alloc& e) {
+					console.log("Memory allocation failed: ", e.what());
+					running_ = false;
+					break;
+				}
+				catch (const std::system_error& e) {
+					console.log("System error: ", e.what());
+					running_ = false;
+					break;
+				}
+			}
+		}
+		else if (ec == asio::error::eof) {
+			console.log("Connection closed by server!");
+			running_ = false;
+
 		}
 		else {
 			console.log("Write error: ", ec.message());
 			running_ = false;
-			break;
 		}
+	}
+	catch (const std::exception& e) {
+		console.log("Unexpected error in write loop: ", e.what());
+		running_ = false;
 	}
 }
 
 void Client::stop() {
 	running_ = false;
-	if (read_thread_.joinable()) read_thread_.join();
-	if (write_thread_.joinable()) write_thread_.join();
+
+	try {
+		error_code ec;
+		socket_.shutdown(tcp::socket::shutdown_both, ec);
+		socket_.close(ec);
+	}
+	catch (const std::exception& e) {
+		console.log("Error during socket cleanup: ", e.what());
+	}
+
+	if (read_thread_.joinable()) {
+		read_thread_.join();
+	}
+	if (write_thread_.joinable()) {
+		write_thread_.join();
+	}
 }
 
 std::string Client::set_time() {

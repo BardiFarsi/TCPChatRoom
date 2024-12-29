@@ -46,6 +46,7 @@ int main() {
 		asio::executor_work_guard<io_context::executor_type>work_guard(io_context.get_executor());
 		tcp::socket socket(io_context);
 		Client client(io_context);
+
 		client.connect(HOST, PORT);
 
 		std::jthread io_thread([&io_context]() {

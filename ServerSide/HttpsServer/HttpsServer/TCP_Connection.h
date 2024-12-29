@@ -9,6 +9,7 @@
 #include <thread>
 #include <iomanip>
 #include <ctime>
+#include <functional>
 #include <boost/asio.hpp>
 
 namespace asio = boost::asio;
@@ -27,28 +28,30 @@ public:
 	~TCP_Connection();
 	static std::shared_ptr<TCP_Connection> create(io_context& io_context, TCP_Server& server);
 	tcp::socket& socket();
-	void start();
+	void start(const std::string& message);
 	void do_read();
-	void do_write();
-	void set_partner(TCP_Connection* otherUser);
+	void do_write(const std::string& message);
 	void stop();
+
 private:
 	void handle_communication();
 	std::string set_time();
 	std::string response();
 	TCP_Server& server_;
+	tcp::socket socket_;
+	error_code ec_;
+	asio::strand<io_context::executor_type> strand_;
+	TCP_Connection* otherUser_;
+	bool running_; 
 	std::mutex date_mtx_;
 	std::mutex response_mtx_;
 	std::mutex read_mtx_;
 	std::mutex write_mtx_;
-	tcp::socket socket_;
-	error_code ec_;
-	bool running_; 
-	std::string message_;
-	asio::strand<io_context::executor_type> strand_;
-	TCP_Connection* otherUser_;
-	std::vector<char> readData_;
-	std::vector<char> writeData_;
 	std::thread read_thread_;
 	std::thread write_thread_;
+	std::string userId_;
+	std::string message_;
+
+	std::vector<char> readData_;
+	std::vector<char> writeData_;
 };

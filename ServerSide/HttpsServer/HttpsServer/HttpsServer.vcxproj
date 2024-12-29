@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="backup.h" />
     <ClInclude Include="Buffer_Sanitizer.h" />
+    <ClInclude Include="Span_Factory.h" />
     <ClInclude Include="LOGGER.h" />
     <ClInclude Include="TCP_Connection.h" />
     <ClInclude Include="TCP_Server.h" />
