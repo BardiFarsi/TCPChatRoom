@@ -1,5 +1,5 @@
 # Chat Room
-
+This Project is at early stage and incomplete. There are parts that are in process.
 # WebSocket Chatroom Project
 
 This project is focused on creating a scalable chatroom system using modern C++ features and web technologies. The core architecture will include a **TCP WebSocket server**, **HTTPS handshake** for user authentication, and a custom logging system utilizing advanced C++20 metaprogramming techniques.
