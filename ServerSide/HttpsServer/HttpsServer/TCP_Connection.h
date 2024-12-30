@@ -32,11 +32,11 @@ public:
 	void start(const std::string& message);
 	void do_read();
 	void do_write(const std::string& message);
-	void stop();
+	void stop_process();
 
 private:
+	void stop();
 	void handle_communication();
-	void stop_process();
 	std::string set_time();
 	std::string response();
 	TCP_Server& server_;

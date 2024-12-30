@@ -11,7 +11,7 @@ TCP_Server::TCP_Server(io_context& io_context, const unsigned short port) :
 TCP_Server::~TCP_Server() {
 	std::lock_guard<std::mutex> lock(connections_mtx_);
 	for (auto& connection : active_connections_) {
-		connection->stop();
+		connection->stop_process();
 	}
 	active_connections_.clear();
 }
