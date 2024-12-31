@@ -9,6 +9,7 @@
 #include <atomic>
 #include <stdexcept>
 
+static std::once_flag idGen_stop_flag_;
 
 class Online_Client : public Client
 {

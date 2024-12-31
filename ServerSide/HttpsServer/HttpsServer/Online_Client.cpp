@@ -12,13 +12,18 @@ Online_Client::Online_Client(std::string userName, TCP_Server& server, TCP_Conne
 Online_Client::~Online_Client() = default;
 
 std::string Online_Client::generate_id(){
-	if (!clientHasId.load(std::memory_order_relaxed)) {
-		clientHasId.store(true, std::memory_order_relaxed);
-		std::string id = server_.client_id_generator(*this);
-		console.log("The client ID: ", clientId_, " generated for the user: ", userName_);
-		return id; 
+	std::string id;
+	try {
+		if (!clientHasId.load(std::memory_order_relaxed)) {
+			std::call_once(idGen_stop_flag_, [&]() {
+				id = server_.client_id_generator(*this);
+				console.log("The client ID: ", clientId_, " generated for the user: ", userName_);
+				clientHasId.store(true, std::memory_order_relaxed);
+				return id;
+				});
+		}
 	}
-	else {
+	catch (const std::exception& e) {
 		console.log("Warning the client already has an ID");
 		console.log("The Client ID is: ", clientId_);
 		throw std::runtime_error("Error!. The client already has an ID!");

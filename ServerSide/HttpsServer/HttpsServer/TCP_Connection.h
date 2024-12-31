@@ -21,6 +21,7 @@ using tcp = asio::ip::tcp;
 using error_code = boost::system::error_code;
 
 constexpr size_t BUFF_SIZE{ 1024 };
+static std::once_flag stop_flag_;
 
 class TCP_Server;
 class Client; 
@@ -48,7 +49,6 @@ private:
 	error_code ec_;
 	asio::strand<io_context::executor_type> strand_;
 	std::atomic<bool> running_;
-	std::once_flag stop_flag_;
 	std::mutex date_mtx_;
 	std::mutex response_mtx_;
 	std::mutex read_mtx_;

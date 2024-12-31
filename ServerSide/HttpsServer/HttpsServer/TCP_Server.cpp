@@ -52,27 +52,29 @@ void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
 std::string TCP_Server::client_id_generator(Online_Client& client) {
 	try {
 		if (!client.clientHasId.load(std::memory_order_acquire)) {
-			{
-				std::lock_guard<std::mutex> lock(id_mutex_);
-				if (std::any_of(online_clients_id.begin(), online_clients_id.end(),
-					[&client](const auto& pair) { return pair.second == &client; })) {
-					throw std::runtime_error("Error! Client already exists in map!");
-				}
+			
+			std::unique_lock<std::mutex> lock(id_mutex_);
+			
+			if (std::any_of(online_clients_id.begin(), online_clients_id.end(),
+				[&client](const auto& pair) { return pair.second == &client; })) {
+				throw std::runtime_error("Error! Client already exists in map!");
 			}
+			lock.unlock();
 
 			std::string id;
 			bool is_unique = false;
 
 			while (!is_unique) {
-				id.clear(); 
+				id.clear();
 				id = create_new_id();
-				std::lock_guard<std::mutex> lock(id_mutex_);
+				lock.lock();
+			
 				if (online_clients_id.find(id) == online_clients_id.end()) {
 					online_clients_id[id] = &client;
 					is_unique = true;
-				}
+				}	
+				lock.unlock();
 			}
-
 			return id;
 		}
 		else {
