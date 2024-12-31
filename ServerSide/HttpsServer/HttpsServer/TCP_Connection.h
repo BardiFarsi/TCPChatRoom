@@ -3,6 +3,8 @@
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
 #include "TCP_Server.h"
+#include "User_Manager.h"
+#include "Client.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -21,6 +23,7 @@ using error_code = boost::system::error_code;
 constexpr size_t BUFF_SIZE{ 1024 };
 
 class TCP_Server;
+class Client; 
 
 class TCP_Connection : public std::enable_shared_from_this<TCP_Connection>
 {
@@ -32,18 +35,18 @@ public:
 	void start(const std::string& message);
 	void do_read();
 	void do_write(const std::string& message);
+	std::string read_from_user();
 	void stop_process();
 
 private:
 	void stop();
 	void handle_communication();
 	std::string set_time();
-	std::string response();
+	std::string response_time();
 	TCP_Server& server_;
 	tcp::socket socket_;
 	error_code ec_;
 	asio::strand<io_context::executor_type> strand_;
-	TCP_Connection* otherUser_;
 	std::atomic<bool> running_;
 	std::once_flag stop_flag_;
 	std::mutex date_mtx_;

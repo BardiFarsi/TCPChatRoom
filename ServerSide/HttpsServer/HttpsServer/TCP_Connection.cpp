@@ -3,8 +3,7 @@
 TCP_Connection::TCP_Connection(io_context& io_context, TCP_Server& server) :
 	socket_(io_context),
 	strand_(asio::make_strand(io_context)),
-	server_(server),
-	otherUser_(nullptr)
+	server_(server)
 {
 	running_.store(true, std::memory_order_release);
 }
@@ -25,7 +24,7 @@ void TCP_Connection::start(const std::string& message) {
 	{
 		std::lock_guard<std::mutex> lock(write_mtx_);
 		message_.clear();
-		message_ = response(); 
+		message_ = response_time(); 
 		message_ += message;
 		writeData_.clear();
 		writeData_.resize(message_.size());
@@ -50,8 +49,11 @@ void TCP_Connection::do_read() {
         if (!ec) {
             while (running_.load(std::memory_order_acquire)) {
                 try {
-                    readData_.clear();
-                    readData_.resize(BUFF_SIZE);
+                    {
+                        std::lock_guard<std::mutex> lock(read_mtx_);
+                        readData_.clear();
+                        readData_.resize(BUFF_SIZE);
+                    }
                     size_t length;
                     try {
                         length = socket_.read_some(asio::buffer(readData_), ec);
@@ -246,6 +248,87 @@ void TCP_Connection::do_write(const std::string& message) {
     }
 }
 
+std::string TCP_Connection::read_from_user() {
+    try {
+        error_code ec;
+        if (!ec) {
+            while (running_.load(std::memory_order_acquire)) {
+                try {
+                    {
+                        std::lock_guard<std::mutex> lock(read_mtx_);
+                        readData_.clear();
+                        readData_.resize(BUFF_SIZE);
+                    }
+                    size_t length;
+                    try {
+                        length = socket_.read_some(asio::buffer(readData_), ec);
+                    }
+                    catch (const boost::system::system_error& e) {
+                        console.log("Socket read error: ", e.what());
+                        running_.store(false, std::memory_order_release);
+                        return{};
+                    }
+
+                    if (!ec) {
+                        std::lock_guard<std::mutex> lock(read_mtx_);
+                        try {
+                            Buffer_Sanitizer sanitizer;
+                            std::string response = sanitizer(readData_);
+
+                            if (response == "Exit++") {
+                                console.log("The user is disconnecting from the server!");
+                                running_.store(false, std::memory_order_release);
+                            }
+
+                            return response;
+                        }
+                        catch (const std::runtime_error& e) {
+                            console.log("Sanitizer error: ", e.what());
+                            running_.store(false, std::memory_order_release);
+                            return{};
+                        }
+                    }
+                    else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
+                        console.log("Client disconnected!");
+                        running_.store(false, std::memory_order_release);
+                        return{};
+                    }
+                    else {
+                        console.log("Read error: ", ec.message());
+                        running_.store(false, std::memory_order_release);
+                        return{};
+                    }
+                }
+                catch (const std::system_error& e) {
+                    console.log("System error in read loop: ", e.what());
+                    running_.store(false, std::memory_order_release);
+                    return{};
+                }
+            }
+        }
+        else if (ec == asio::error::eof) {
+            console.log("Connection closed by server!");
+            running_.store(false, std::memory_order_release);
+            return{};
+        }
+        else {
+            console.log("Read error: ", ec.message());
+            running_.store(false, std::memory_order_release);
+            return{};
+        }
+    }
+    catch (const std::exception& e) {
+        console.log("Unexpected error in do_read: ", e.what());
+        running_.store(false, std::memory_order_release);
+        return{};
+    }
+    catch (...) {
+        console.log("Unknown error in do_read");
+        running_.store(false, std::memory_order_release);
+        return{};
+    }
+}
+
 void TCP_Connection::stop_process() {
     std::call_once(stop_flag_, [this]() {
         stop();
@@ -302,7 +385,7 @@ std::string TCP_Connection::set_time() {
 	}
 }
 
-std::string TCP_Connection::response() {
+std::string TCP_Connection::response_time() {
 	std::lock_guard<std::mutex> lock(response_mtx_);
 	std::string response = set_time();
 	response += "\n Received your request!";
