@@ -1,5 +1,8 @@
 # Chat Room
-This Project is at early stage and incomplete. There are parts that are in process.
+This Project is at early stage and incomplete.
+**Note**
+This project is open to the public solely for educational and non-commercial purposes. Any use of the code or derivations of this project for commercial purposes is strictly prohibited by the author.
+
 # WebSocket Chatroom Project
 
 This project is focused on creating a scalable chatroom system using modern C++ features and web technologies. The core architecture will include a **TCP WebSocket server**, **HTTPS handshake** for user authentication, and a custom logging system utilizing advanced C++20 metaprogramming techniques.
@@ -79,7 +82,15 @@ The header files contain essential classes and utilities for the project:
 Contributions to the project are welcome! If you'd like to contribute, please fork the repository and create a pull request with your proposed changes. Ensure that your code adheres to the project's coding style and that all tests pass before submitting your pull request.
 
 ## License
-This project is licensed under the GNU General Public License (GPL). See the LICENSE file for details.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0). See the LICENSE file for more details.
+Copyright © 2024 Masoud Farsi. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and distribute the Software for non-commercial purposes only, subject to the following conditions:
+
+1. The Software may not be used for commercial purposes, including but not limited to commercial software development, services, or distribution.
+2. Any modifications or derivative works of the Software must retain this notice and the original copyright statement.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Note: This project is still in its early stages and is actively being developed. Keep an eye out for future updates and feature implementations.
 
