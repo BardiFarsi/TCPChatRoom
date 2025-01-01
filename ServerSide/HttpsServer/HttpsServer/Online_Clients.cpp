@@ -1,15 +1,15 @@
-#include "Online_Client.h"
+#include "Online_Clients.h"
 
-Online_Client::Online_Client(std::string userName, TCP_Server& server, TCP_Connection& connection) : 
-	Client(server, connection), userName_(userName) 
+Online_Clients::Online_Clients()
 {
 	userVariables_.push_back("User Name: ");
 	userVariables_.push_back("Client ID: ");
-	clientHasId.store(false, std::memory_order_relaxed);
-	clientId_ = generate_id(); 
+	//clientId_ = generate_id(); 
 }
 
-Online_Client::~Online_Client() = default;
+Online_Clients::~Online_Clients() = default;
+/*
+
 
 std::string Online_Client::generate_id(){
 	std::string id;
@@ -29,10 +29,11 @@ std::string Online_Client::generate_id(){
 		throw std::runtime_error("Error!. The client already has an ID!");
 	}
 }
+*/
 
-std::string Online_Client::getter_user_name() const {
+std::string Online_Clients::getter_user_name() const {
 	return userName_;
 }
-std::string Online_Client::getter_client_id() const {
+std::string Online_Clients::getter_client_id() const {
 	return clientId_;
 }

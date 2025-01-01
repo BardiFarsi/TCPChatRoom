@@ -223,4 +223,98 @@ int main() {
     return 0;
 }
 
+
+
+
+
+
+
+
+// In your header file (.h):
+class User_Manager {
+public:
+    // ... other members ...
+private:
+    std::mutex signingPrompt_mtx_;
+    std::condition_variable cv_;
+    bool prompt_ready_ = false;
+
+    void process_prompt();
+    // ... other members ...
+};
+cppCopy// In your implementation file (.cpp):
+void User_Manager::invalid_argument_prompt() {
+    {
+        std::lock_guard<std::mutex> lock(signingPrompt_mtx_);
+        handlerPrompt_.clear();
+        handlerPrompt_ += invalidArgument_;
+        prompt_ready_ = true;
+    }
+    cv_.notify_one();
+    process_prompt();
+}
+
+void User_Manager::process_prompt() {
+    std::unique_lock<std::mutex> lock(signingPrompt_mtx_);
+    cv_.wait(lock, [this]() { return prompt_ready_; });
+
+    prompt_ready_ = false;
+    connection_.do_write(handlerPrompt_);
+    userResponse_ = connection.read_from_user();
+    master_entrance_handeler(userResponse_);
+    userResponse_.clear();
+    handlerPrompt_.clear();
+}
+
+Alternative approach using a state machine pattern :
+
+cppCopy// In your header file (.h):
+class User_Manager {
+public:
+    void start_prompt_loop(TCP_Connection& connection);
+    // ... other members ...
+private:
+    enum class PromptState {
+        INITIAL,
+        INVALID_INPUT,
+        EXIT
+    };
+    PromptState current_state_ = PromptState::INITIAL;
+    // ... other members ...
+};
+cppCopy// In your implementation file (.cpp):
+void User_Manager::start_prompt_loop(TCP_Connection& connection) {
+    while (current_state_ != PromptState::EXIT) {
+        std::lock_guard<std::mutex> lock(signingPrompt_mtx_);
+
+        if (current_state_ == PromptState::INVALID_INPUT) {
+            handlerPrompt_ = invalidArgument_;
+        }
+        else {
+            handlerPrompt_ = startingPrompt_;
+        }
+
+        connection.do_write(handlerPrompt_);
+        userResponse_ = connection.read_from_user();
+
+        if (userResponse_ == "1") {
+            user_sign_up(connection);
+            current_state_ = PromptState::INITIAL;
+        }
+        else if (userResponse_ == "2") {
+            user_log_in(connection);
+            current_state_ = PromptState::INITIAL;
+        }
+        else if (userResponse_ == "Exit++") {
+            current_state_ = PromptState::EXIT;
+            connection.stop_process();
+        }
+        else {
+            current_state_ = PromptState::INVALID_INPUT;
+        }
+
+        handlerPrompt_.clear();
+        userResponse_.clear();
+    }
+}
 #endif

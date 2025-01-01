@@ -3,7 +3,8 @@
 #include "LOGGER.h"
 #include "Span_Factory.h"
 #include "Client.h"
-#include "Online_Client.h"
+#include "Online_Clients.h"
+#include "All_Clients.h"
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -63,8 +64,7 @@ class TCP_Server
 public:
 	template<Message T>
 		requires Message<T>
-	auto broadcast_message(T& message, std::shared_ptr<TCP_Connection> sender) 
-		-> std::enable_if_t<has_data_method<T>::value && has_size_method<T>::value, void> {
+	void broadcast_message(T& message, std::shared_ptr<TCP_Connection> sender) {
 		static_assert(has_data_method<T>::value,
 			"Type must have a data() method");
 		static_assert(has_size_method<T>::value,
@@ -89,7 +89,7 @@ public:
 		}
 	}
 
-	std::string client_id_generator(Online_Client& client);
+	std::string client_id_generator(std::unique_ptr<Client>& client);
 	void remove_connection(std::shared_ptr<TCP_Connection> connection);
 	TCP_Server(io_context& io_context, const unsigned short port);
 	~TCP_Server();
@@ -105,7 +105,7 @@ private:
 	void start_accept_v4();
 	void handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec);
 	std::vector<std::shared_ptr<TCP_Connection>> active_connections_;
-	std::unordered_map<std::string, Client*> online_clients_id; 
+	
 	std::mutex connections_mtx_;
 	std::mutex id_mutex_;
 	std::random_device rd;

@@ -1,6 +1,7 @@
 #include "LOGGER.h"
 #include "TCP_Server.h"
 #include "TCP_Connection.h"
+#include "All_Clients.h"
 #include <exception>
 #include <string>
 #include <thread>

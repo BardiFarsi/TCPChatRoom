@@ -32,12 +32,11 @@ void TCP_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection,
 			active_connections_.push_back(newConnection);
 			message = " New user joined the chat room. Total users: " +
 				std::to_string(active_connections_.size());
-		}
+		} // Here we need signup 
 		newConnection->start(message);
 	}
 	start_accept_v4();
 }
-
 
 void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
 	std::unique_lock<std::mutex> lock(connections_mtx_);
@@ -49,13 +48,13 @@ void TCP_Server::remove_connection(std::shared_ptr<TCP_Connection> connection) {
 	lock.unlock();
 }
 
-std::string TCP_Server::client_id_generator(Online_Client& client) {
+std::string TCP_Server::client_id_generator(std::unique_ptr<Client>& client) {
 	try {
-		if (!client.clientHasId.load(std::memory_order_acquire)) {
+		if (!Registered_Client::clientHasId.load(std::memory_order_acquire)) {
 			
 			std::unique_lock<std::mutex> lock(id_mutex_);
-			
-			if (std::any_of(online_clients_id.begin(), online_clients_id.end(),
+			// Here search for Fixed Clien Map
+			if (std::any_of(ClientList.valid_Clients.begin(), ClientList.valid_Clients.end(),
 				[&client](const auto& pair) { return pair.second == &client; })) {
 				throw std::runtime_error("Error! Client already exists in map!");
 			}
@@ -69,8 +68,8 @@ std::string TCP_Server::client_id_generator(Online_Client& client) {
 				id = create_new_id();
 				lock.lock();
 			
-				if (online_clients_id.find(id) == online_clients_id.end()) {
-					online_clients_id[id] = &client;
+				if (ClientList.valid_Clients.find(id) == ClientList.valid_Clients.end()) {
+					ClientList.valid_Clients[id] = &client;
 					is_unique = true;
 				}	
 				lock.unlock();

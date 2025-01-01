@@ -9,22 +9,20 @@
 #include <atomic>
 #include <stdexcept>
 
-static std::once_flag idGen_stop_flag_;
-
-class Online_Client : public Client
+class Online_Clients
 {
 public:
-	Online_Client(std::string userName, TCP_Server& server, TCP_Connection& connection);
-	~Online_Client();
-	std::string generate_id() override;
+	Online_Clients();
+	~Online_Clients();
 	std::string getter_user_name() const;
 	std::string getter_client_id() const;
-	std::atomic<bool> clientHasId; 
+	bool add_online_clients(std::string id); 
+	std::atomic<bool> clientIsOnline; 
 private: 
 	std::string userName_;
 	std::string clientId_; 
 	std::vector<std::string> userVariables_; 
-	std::unordered_map<std::string, std::string> userDataDictionary_;
+	std::unordered_map<std::string, std::unique_ptr<Client>> onlineUsers_;
 
 };
 

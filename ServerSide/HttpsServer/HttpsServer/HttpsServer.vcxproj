@@ -136,21 +136,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Client_Factory.cpp" />
+    <ClCompile Include="Registered_Client.cpp" />
     <ClCompile Include="LOGGER.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Online_Client.cpp" />
+    <ClCompile Include="Online_Clients.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="All_Clients.cpp" />
     <ClCompile Include="TCP_Connection.cpp" />
     <ClCompile Include="TCP_Server.cpp" />
     <ClCompile Include="User_Manager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="All_Clients.h" />
+    <ClInclude Include="Registered_Client.h" />
     <ClInclude Include="backup.h" />
     <ClInclude Include="Buffer_Sanitizer.h" />
     <ClInclude Include="Client.h" />
-    <ClInclude Include="Client_Factory.h" />
-    <ClInclude Include="Online_Client.h" />
+    <ClInclude Include="Online_Clients.h" />
     <ClInclude Include="Span_Factory.h" />
     <ClInclude Include="LOGGER.h" />
     <ClInclude Include="TCP_Connection.h" />

@@ -27,7 +27,7 @@
     <ClCompile Include="TCP_Connection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Online_Client.cpp">
+    <ClCompile Include="Online_Clients.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Client.cpp">
@@ -36,7 +36,10 @@
     <ClCompile Include="User_Manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Client_Factory.cpp">
+    <ClCompile Include="Registered_Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="All_Clients.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,13 +65,16 @@
     <ClInclude Include="Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Online_Client.h">
+    <ClInclude Include="Online_Clients.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="User_Manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Client_Factory.h">
+    <ClInclude Include="Registered_Client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="All_Clients.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
