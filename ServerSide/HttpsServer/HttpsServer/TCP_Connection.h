@@ -2,9 +2,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
-#include "TCP_Server.h"
 #include "User_Manager.h"
-#include "Client.h"
+#include "Message.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -13,7 +12,10 @@
 #include <iomanip>
 #include <ctime>
 #include <functional>
+#include <type_traits>
+#include <utility>
 #include <boost/asio.hpp>
+
 
 namespace asio = boost::asio;
 using io_context = asio::io_context;
@@ -23,28 +25,28 @@ using error_code = boost::system::error_code;
 constexpr size_t BUFF_SIZE{ 1024 };
 static std::once_flag stop_flag_;
 
-class TCP_Server;
-class Client; 
+class Master_Server;
 
 class TCP_Connection : public std::enable_shared_from_this<TCP_Connection>
 {
 public:
-	TCP_Connection(io_context& io_context, TCP_Server& server);
-	~TCP_Connection();
-	static std::shared_ptr<TCP_Connection> create(io_context& io_context, TCP_Server& server);
+	TCP_Connection(io_context& io_context, Master_Server& masterServer);
+	virtual  ~TCP_Connection();
+	static std::shared_ptr<TCP_Connection> create(io_context& io_context, Master_Server& masterServer);
 	tcp::socket& socket();
 	void start(const std::string& message);
 	void do_read();
 	void do_write(const std::string& message);
 	std::string read_from_user();
 	void stop_process();
-
+	TCP_Connection(TCP_Connection&& other) noexcept = default;
+	TCP_Connection& operator=(TCP_Connection&& other) noexcept = default;
 private:
 	void stop();
 	void handle_communication();
 	std::string set_time();
 	std::string response_time();
-	TCP_Server& server_;
+	Master_Server& masterServer_;
 	tcp::socket socket_;
 	error_code ec_;
 	asio::strand<io_context::executor_type> strand_;

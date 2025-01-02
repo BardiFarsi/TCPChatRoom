@@ -1,24 +1,33 @@
 #include "TCP_Connection.h"
 
-TCP_Connection::TCP_Connection(io_context& io_context, TCP_Server& server) :
-	socket_(io_context),
-	strand_(asio::make_strand(io_context)),
-	server_(server)
+TCP_Connection::TCP_Connection(io_context& io_context, Master_Server& masterServer) :
+    socket_(io_context),
+    strand_(asio::make_strand(io_context)),
+    masterServer_(masterServer)
 {
-	running_.store(true, std::memory_order_release);
+    running_.store(true, std::memory_order_seq_cst);
+    std::cout << "TCP_Connection created\n";
 }
 
 TCP_Connection::~TCP_Connection() {
     stop_process();
+    std::cout << "TCP_Connection destroyed\n";
 }
 
-std::shared_ptr<TCP_Connection> TCP_Connection::create(io_context& io_context, TCP_Server& server) {
-	return std::make_shared<TCP_Connection>(io_context, server);
+std::shared_ptr<TCP_Connection> TCP_Connection::create(io_context& io_context, Master_Server& masterServer) {
+    try {
+        return std::make_shared<TCP_Connection>(io_context, masterServer);
+    }
+    catch (const std::bad_alloc& e) {
+        std::cerr << "Failed to create TCP_Connection: " << e.what() << '\n';
+        throw;
+    }
 }
 
 tcp::socket& TCP_Connection::socket() {
-	return socket_;
+    return socket_;
 }
+
 
 void TCP_Connection::start(const std::string& message) {
 	{
@@ -74,13 +83,13 @@ void TCP_Connection::do_read() {
                                 console.log("The client exit the chat");
                                 response.clear();
                                 response = "A user is leaving the chatroom!";
-                                server_.broadcast_message(response, shared_from_this());
+                                masterServer_.broadcast_message(response, shared_from_this());
                                 running_.store(false, std::memory_order_release);
                                 break;
                             }
 
                             try {
-                                server_.broadcast_message(readData_, shared_from_this());
+                                masterServer_.broadcast_message(readData_, shared_from_this());
                             }
                             catch (const boost::system::system_error& e) {
                                 console.log("Broadcast error: ", e.what());
@@ -157,7 +166,7 @@ void TCP_Connection::do_write(const std::string& message) {
                                     writeData_.clear();
                                     writeData_.resize(message_.size());
                                     std::copy(message_.begin(), message_.end(), writeData_.begin());
-                                    server_.broadcast_message(writeData_, shared_from_this());
+                                    masterServer_.broadcast_message(writeData_, shared_from_this());
                                 }
                                 catch (const std::bad_alloc& e) {
                                     console.log("Memory allocation failed: ", e.what());
@@ -203,7 +212,7 @@ void TCP_Connection::do_write(const std::string& message) {
 
                     if (!ec) {
                         try {
-                            server_.broadcast_message(writeData_, nullptr);
+                            masterServer_.broadcast_message(writeData_, nullptr);
                         }
                         catch (const boost::system::system_error& e) {
                             console.log("System error: ", e.what());
@@ -356,7 +365,7 @@ void TCP_Connection::stop() {
 		write_thread_.join();
 	}
 
-	server_.remove_connection(shared_from_this());
+    masterServer_.remove_connection(shared_from_this());
 }
 
 std::string TCP_Connection::set_time() {

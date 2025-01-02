@@ -1,11 +1,12 @@
-#if 0
-
 #pragma once
 #include "TCP_Connection.h"
 #include "LOGGER.h"
 #include "Span_Factory.h"
-#include "Master_Server.h"
+#include "Client.h"
+#include "Online_Clients.h"
+#include "All_Clients.h"
 #include "Message.h"
+#include "TCP_Server.h"
 #include <vector>
 #include <unordered_map>
 #include <string>
@@ -28,11 +29,37 @@ using io_context = asio::io_context;
 using tcp = asio::ip::tcp;
 using error_code = boost::system::error_code;
 
-class TCP_Connection; 
-class Client;
-class Online_Client;
+class TCP_Connection;
 
-class TCP_Server
+template <typename T>
+concept validMessageType =
+std::same_as<T, std::string> ||
+std::same_as<T, std::string_view>;
+
+template <typename T>
+concept validContainers =
+std::ranges::range<T> &&
+(std::same_as<std::ranges::range_value_t<T>, char> ||
+	std::same_as<std::ranges::range_value_t<T>, unsigned char> ||
+	std::same_as<std::ranges::range_value_t<T>, signed char>);
+
+template <typename T>
+concept Message = validMessageType<T> || validContainers<T>;
+
+template<typename T, typename = void>
+struct has_data_method : std::false_type {};
+
+template<typename T>
+struct has_data_method<T, std::void_t<decltype(std::declval<T>().data())>> : std::true_type {};
+
+template<typename T, typename = void>
+struct has_size_method : std::false_type {};
+
+template<typename T>
+struct has_size_method<T, std::void_t<decltype(std::declval<T>().size())>> : std::true_type {};
+
+
+class Master_Server : public std::enable_shared_from_this<Master_Server>
 {
 public:
 	template<Message T>
@@ -61,24 +88,17 @@ public:
 			}
 		}
 	}
-
 	void remove_connection(std::shared_ptr<TCP_Connection> connection);
-	TCP_Server(io_context& io_context, const unsigned short port);
-	~TCP_Server();
+	Master_Server(io_context& io_context, const unsigned short port);
+	~Master_Server();
 
 private:
-	static constexpr size_t TIMESTAMP_LENGTH = 10;
-	static constexpr size_t RANDOM_LENGTH = 6;
-	static constexpr size_t PREFIX_LENGTH = 3;
 	io_context& io_context_;
+	// Windows can only handle IPV4 AND IPV6 Separately
 	tcp::acceptor acceptor_v4_;
 	void start_accept_v4();
 	void handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec);
 	std::vector<std::shared_ptr<TCP_Connection>> active_connections_;
 	std::mutex connections_mtx_;
 	std::mutex id_mutex_;
-	std::random_device rd;
-	std::mt19937_64 gen;
 };
-
-#endif

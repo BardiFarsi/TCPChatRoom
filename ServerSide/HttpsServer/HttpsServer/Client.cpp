@@ -1,6 +1,6 @@
 #include "Client.h"
 
-Client::Client(TCP_Connection& connection)
-    : connection_(connection) {}  
+Client::Client(std::shared_ptr<TCP_Connection> connection)
+    : connection_(std::move(connection)) {}  
 
-Client::~Client() {}
+Client::~Client() = default; 

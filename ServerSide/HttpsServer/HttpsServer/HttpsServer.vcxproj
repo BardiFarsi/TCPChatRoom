@@ -136,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Master_Server.cpp" />
     <ClCompile Include="Registered_Client.cpp" />
     <ClCompile Include="LOGGER.cpp" />
     <ClCompile Include="main.cpp" />
@@ -148,6 +149,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="All_Clients.h" />
+    <ClInclude Include="Message.h" />
+    <ClInclude Include="Master_Server.h" />
     <ClInclude Include="Registered_Client.h" />
     <ClInclude Include="backup.h" />
     <ClInclude Include="Buffer_Sanitizer.h" />
