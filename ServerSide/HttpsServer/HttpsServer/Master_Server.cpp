@@ -5,7 +5,7 @@ Master_Server::Master_Server(io_context& io_context, const unsigned short port) 
 	acceptor_v4_(io_context, tcp::endpoint(tcp::v4(), port))
 {
 	console.log("Server starts running");
-
+	User_Manager GateWay(*this);
 	start_accept_v4();
 }
 
@@ -24,14 +24,15 @@ void Master_Server::start_accept_v4() {
 }
 
 void Master_Server::handle_accept_v4(std::shared_ptr<TCP_Connection> newConnection, const error_code& ec) {
+	User_Manager GateWay(*this);
 	if (!ec) {
 		console.log("Connection from IPv4 accepted.");
 		std::string message;
 		{
 			std::lock_guard<std::mutex> lock(connections_mtx_);
 			active_connections_.push_back(newConnection);
-		} 
-		//GateWay.master_entrance_handeler(newConnection);
+		}
+		GateWay.master_entrance_handeler(newConnection);
 	}
 	start_accept_v4();
 }

@@ -83,7 +83,6 @@ bool All_Clients::verify_consistency(const std::string& id, const std::shared_pt
         return false;
     }
 
-    std::scoped_lock lock(valid_mtx_, client_mtx_);
     return (
         if_client_exist(newClient) && 
         if_client_valid(newClient) &&

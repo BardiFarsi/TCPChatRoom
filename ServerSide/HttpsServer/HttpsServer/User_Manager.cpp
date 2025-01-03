@@ -23,9 +23,20 @@ void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> conn
 
             handlerPrompt_ += startingPrompt_;
 
-            connection->do_write(handlerPrompt_);
-            userResponse_ = connection->read_from_user();
-            handle_user_response(connection);
+            if (connection->running_.load(std::memory_order_consume)) {
+                connection->do_prompt_user(handlerPrompt_);
+            }
+
+            if (connection->running_.load(std::memory_order_consume)) {
+                userResponse_ = connection->read_from_user();
+            }
+
+            if (userResponse_ != readError_) {
+                handle_user_response(connection);
+            }
+            else {
+                console.log("Error in read handling");
+            }
 
             handlerPrompt_.clear();
             userResponse_.clear();
@@ -39,7 +50,7 @@ void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> conn
 
 void User_Manager::handle_user_response(const std::shared_ptr<TCP_Connection> conncetion) {
     if (userResponse_ == "1") {
-        user_sign_up(std::move(conncetion));
+        user_sign_up(conncetion);
         current_state_ = PromptState::EXIT;
     }
     else if (userResponse_ == "2") {
@@ -63,60 +74,83 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
 
     try {
         error_code ec;
-        std::lock_guard<std::mutex> lock(userResponse_mtx_);
-
-        connection->do_write(userNamePrompt_);
+       
+        if (connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user(userNamePrompt_);
+        }
+       
         userResponse_.clear();
-        userResponse_ = connection->read_from_user();
-        userName_ = sanitizer_(userResponse_);
-        std::string name{ "ACD" }; 
-        std::shared_ptr<Client> newClient = std::make_shared<Registered_Client>(connection, name);
+
+        if (connection->running_.load(std::memory_order_acquire)) {
+            userResponse_ = connection->read_from_user();
+        }
+
+        if (userResponse_ != readError_) {
+            userName_ = sanitizer_(userResponse_);
+        }
+        else {
+            console.log("Error in read handling");
+        }
+
+        std::shared_ptr<Client> newClient = std::make_shared<Registered_Client>(connection, userName_);
+
         if (!ClientList.add_new_user(newClient)) {
-            if (!ec) {
-                connection->do_write("Client already exists or registration failed. (×_×)");
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                connection->do_prompt_user("Client already exists or registration failed. (×_×)");
             }
+            console.log("Connection failed during Sign Up process");
             return false;
         }
 
         userId_ = client_id_generator();
-        newClient->write_client_id(userId_);
+        userIdMessageCreated_ += userId_;
+
+        if (!ec) {
+            newClient->write_client_id(userIdMessageCreated_);
+        }
 
         if (!ClientList.insert_registered_client(userId_, newClient)) {
             console.log("Failed to connect the client!");
-            if (!ec) {
-                connection->do_write(
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                connection->do_prompt_user(
                     "Oops! An error occurred during registration. Please contact us for further details. (×_×)");
+                connection->running_.store(false, std::memory_order_acquire);
             }
+            console.log("Connection failed during Sign Up process");
             return false;
         }
         
         console.log("Client Successfully Registered");
 
-        if (!ec) {
-            newClient->connection_->do_write(create_registration_announcement(userId_));
+        if (!ec && connection->running_.load(std::memory_order_acquire)) {
+            newClient->connection_->do_prompt_user(create_registration_announcement(userId_));
         }
-        // user_log_in(newClient->get_connection());
+        
+        user_log_in(newClient->connection_);
         return true;
 
     }
     catch (const boost::system::system_error& e) {
         console.log("Network error during sign up: ", e.what());
-        if (connection) {
-            connection->do_write("Network error occurred during registration. Please try again later.");
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("Network error occurred during registration. Please try again later.");
+            connection->running_.store(false, std::memory_order_release);
         }
         return false;
     }
     catch (const std::runtime_error& e) {
         console.log("Sign up process failed! ", e.what());
-        if (connection) {
-            connection->do_write("An unexpected error occurred during registration.");
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("An unexpected error occurred during registration.");
+            connection->running_.store(false, std::memory_order_release);
         }
         return false;
     }
     catch (...) {
         console.log("Unknown error during sign up process");
-        if (connection) {
-            connection->do_write("An unexpected error occurred during registration.");
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("An unexpected error occurred during registration.");
+            connection->running_.store(false, std::memory_order_release);
         }
         return false;
     }
@@ -125,13 +159,13 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
 std::string User_Manager::create_registration_announcement(const std::string& userId) {
     std::string announcement = "Congratulations! Your account has been successfully created. ^_^ \n";
     announcement += userId;
-    announcement += "\nPlease keep you User ID safe to be able to connect to server. ";
+    announcement += "\n. Please keep your User ID safe to be able to reconnect to server again. ";
     return announcement;
 }
 
 bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
 
-	console.log("Loging in");
+	console.log("Logging in..."); // NOT CREATED YET
 	return true; 
 }
 

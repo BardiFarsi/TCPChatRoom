@@ -53,288 +53,263 @@ void TCP_Connection::handle_communication() {
 }
 
 void TCP_Connection::do_read() {
-    try {
-        error_code ec;
-        if (!ec) {
-            while (running_.load(std::memory_order_acquire)) {
+    error_code ec;
+    if (!ec) {
+        while (running_.load(std::memory_order_acquire)) {
+            try {
+                {
+                    std::lock_guard<std::mutex> lock(read_mtx_);
+                    readData_.clear();
+                    readData_.resize(BUFF_SIZE);
+                }
+                size_t length;
                 try {
-                    {
-                        std::lock_guard<std::mutex> lock(read_mtx_);
-                        readData_.clear();
-                        readData_.resize(BUFF_SIZE);
-                    }
-                    size_t length;
+                    length = socket_.read_some(asio::buffer(readData_), ec);
+                }
+                catch (const boost::system::system_error& e) {
+                    console.log("Socket read error: ", e.what());
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                if (!ec) {
+                    std::lock_guard<std::mutex> lock(read_mtx_);
                     try {
-                        length = socket_.read_some(asio::buffer(readData_), ec);
-                    }
-                    catch (const boost::system::system_error& e) {
-                        console.log("Socket read error: ", e.what());
-                        running_.store(false, std::memory_order_release);
-                        break;
-                    }
-
-                    if (!ec) {
-                        std::lock_guard<std::mutex> lock(read_mtx_);
-                        try {
-                            Buffer_Sanitizer sanitizer;
-                            std::string response = sanitizer(readData_);
-
-                            if (response == "Exit++") {
-                                console.log("The client exit the chat");
-                                response.clear();
-                                response = "A user is leaving the chatroom!";
-                                masterServer_.broadcast_message(response, shared_from_this());
-                                running_.store(false, std::memory_order_release);
-                                break;
-                            }
-
-                            try {
-                                masterServer_.broadcast_message(readData_, shared_from_this());
-                            }
-                            catch (const boost::system::system_error& e) {
-                                console.log("Broadcast error: ", e.what());
-                                running_.store(false, std::memory_order_release);
-                                break;
-                            }
-
-                            console.log(response);
-                            readData_.clear();
-                        }
-                        catch (const std::runtime_error& e) {
-                            console.log("Sanitizer error: ", e.what());
+                        Buffer_Sanitizer sanitizer;
+                        std::string response = sanitizer(readData_);
+                        if (response == "Exit++") {
+                            console.log("The client exit the chat");
+                            response.clear();
+                            response = "A user is leaving the chatroom!";
+                            masterServer_.broadcast_message(response, shared_from_this());
                             running_.store(false, std::memory_order_release);
                             break;
                         }
+                        masterServer_.broadcast_message(readData_, shared_from_this());
+
+                        console.log(response);
+                        readData_.clear();
                     }
-                    else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
-                        console.log("Client disconnected!");
-                        running_.store(false, std::memory_order_release);
-                        break;
-                    }
-                    else {
-                        console.log("Read error: ", ec.message());
+                    catch (const std::runtime_error& e) {
+                        console.log("Sanitizer error: ", e.what());
                         running_.store(false, std::memory_order_release);
                         break;
                     }
                 }
-                catch (const std::system_error& e) {
-                    console.log("System error in read loop: ", e.what());
+                else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
+                    console.log("Client disconnected!");
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                else {
+                    console.log("Read error: ", ec.message());
                     running_.store(false, std::memory_order_release);
                     break;
                 }
             }
-        }
-        else if (ec == asio::error::eof) {
-            console.log("Connection closed by server!");
-            running_.store(false, std::memory_order_release);
-        }
-        else {
-            console.log("Read error: ", ec.message());
-            running_.store(false, std::memory_order_release);
+            catch (const std::system_error& e) {
+                console.log("System error in read loop: ", e.what());
+                running_.store(false, std::memory_order_release);
+                break;
+            }
         }
     }
-    catch (const std::exception& e) {
-        console.log("Unexpected error in do_read: ", e.what());
+    else if (ec == asio::error::eof) {
+        console.log("Connection closed by server!");
         running_.store(false, std::memory_order_release);
     }
-    catch (...) {
-        console.log("Unknown error in do_read");
+    else {
+        console.log("Read error: ", ec.message());
         running_.store(false, std::memory_order_release);
     }
 }
 
-
 void TCP_Connection::do_write(const std::string& message) {
-    try {
-        error_code ec;
-        if (!ec) {
-            while (running_.load(std::memory_order_acquire)) {
-                try {
-                    if (!ec) {
-                        std::lock_guard<std::mutex> lock(write_mtx_);
+    error_code ec;
+    if (!ec) {
+        while (running_.load(std::memory_order_acquire)) {
+            try {
+                if (!ec) {
+                    std::lock_guard<std::mutex> lock(write_mtx_);
+                    message_.clear();
+                    console.log("Type your message: ");
+                    std::getline(cin, message_);
+                    if (message_ == "Exit++") {
+                        console.log("Server is going to close the connection!");
+                        message_.clear();
+                        message_ = "Server is closing the chat! ";
                         try {
-                            message_.clear();
-                            console.log("Type your message: ");
-                            std::getline(cin, message_);
-
-                            if (message_ == "Exit++") {
-                                console.log("Server is going to close the connection!");
-                                message_.clear();
-                                message_ = "Server is closing the chat! ";
-
-                                try {
-                                    writeData_.clear();
-                                    writeData_.resize(message_.size());
-                                    std::copy(message_.begin(), message_.end(), writeData_.begin());
-                                    masterServer_.broadcast_message(writeData_, shared_from_this());
-                                }
-                                catch (const std::bad_alloc& e) {
-                                    console.log("Memory allocation failed: ", e.what());
-                                    running_.store(false, std::memory_order_release);
-                                    break;
-                                }
-
-                                running_.store(false, std::memory_order_release);
-                                break;
-                            }
-
-                            try {
-                                writeData_.clear();
-                                writeData_.resize(message_.size());
-                                std::copy(message_.begin(), message_.end(), writeData_.begin());
-                            }
-                            catch (const std::bad_alloc& e) {
-                                console.log("Memory allocation failed: ", e.what());
-                                running_.store(false, std::memory_order_release);
-                                break;
-                            }
-                            catch (const std::length_error& e) {
-                                console.log("Buffer size error: ", e.what());
-                                throw;
-                            }
+                            writeData_.clear();
+                            writeData_.resize(message_.size());
+                            std::copy(message_.begin(), message_.end(), writeData_.begin());
+                            masterServer_.broadcast_message(writeData_, shared_from_this());
                         }
-                        catch (const std::ios_base::failure& e) {
-                            console.log("I/O operation failed: ", e.what());
+                        catch (const std::bad_alloc& e) {
+                            console.log("Memory allocation failed: ", e.what());
                             running_.store(false, std::memory_order_release);
                             break;
                         }
-                    }
-                    else if (ec == asio::error::eof) {
-                        console.log("Connection closed by server!");
                         running_.store(false, std::memory_order_release);
                         break;
                     }
-                    else {
-                        console.log("Write error: ", ec.message());
-                        running_.store(false, std::memory_order_release);
-                        break;
+                    writeData_.clear();
+                    writeData_.resize(message_.size());
+                    std::copy(message_.begin(), message_.end(), writeData_.begin());
+                }
+                else if (ec == asio::error::eof) {
+                    console.log("Connection closed by server!");
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                else {
+                    console.log("Write error: ", ec.message());
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                if (!ec) {
+                    try {
+                        masterServer_.broadcast_message(writeData_, nullptr);
                     }
-
-                    if (!ec) {
-                        try {
-                            masterServer_.broadcast_message(writeData_, nullptr);
-                        }
-                        catch (const boost::system::system_error& e) {
-                            console.log("System error: ", e.what());
-                            running_.store(false, std::memory_order_release);
-                            break;
-                        }
-                    }
-                    else if (ec == asio::error::eof) {
-                        console.log("Connection closed by server!");
-                        running_.store(false, std::memory_order_release);
-                        break;
-                    }
-                    else {
-                        console.log("Write error: ", ec.message());
+                    catch (const boost::system::system_error& e) {
+                        console.log("System error: ", e.what());
                         running_.store(false, std::memory_order_release);
                         break;
                     }
                 }
-                catch (const std::system_error& e) {
-                    console.log("System error: ", e.what());
+                else if (ec == asio::error::eof) {
+                    console.log("Connection closed by server!");
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                else {
+                    console.log("Write error: ", ec.message());
                     running_.store(false, std::memory_order_release);
                     break;
                 }
             }
-        }
-        else if (ec == asio::error::eof) {
-            console.log("Connection closed by server!");
-            running_.store(false, std::memory_order_release);
-        }
-        else {
-            console.log("Write error: ", ec.message());
-            running_.store(false, std::memory_order_release);
+            catch (const std::system_error& e) {
+                console.log("System error: ", e.what());
+                running_.store(false, std::memory_order_release);
+                break;
+            }
         }
     }
-    catch (const std::exception& e) {
-        console.log("Unexpected error in do_write: ", e.what());
+    else if (ec == asio::error::eof) {
+        console.log("Connection closed by server!");
         running_.store(false, std::memory_order_release);
     }
-    catch (...) {
-        console.log("Unknown error in do_write");
+    else {
+        console.log("Write error: ", ec.message());
         running_.store(false, std::memory_order_release);
     }
 }
 
 std::string TCP_Connection::read_from_user() {
-    try {
-        error_code ec;
-        if (!ec) {
-            while (running_.load(std::memory_order_acquire)) {
-                try {
-                    {
-                        std::lock_guard<std::mutex> lock(read_mtx_);
-                        readData_.clear();
-                        readData_.resize(BUFF_SIZE);
-                    }
-                    size_t length;
-                    try {
-                        length = socket_.read_some(asio::buffer(readData_), ec);
-                    }
-                    catch (const boost::system::system_error& e) {
-                        console.log("Socket read error: ", e.what());
-                        running_.store(false, std::memory_order_release);
-                        return{};
-                    }
-
-                    if (!ec) {
-                        std::lock_guard<std::mutex> lock(read_mtx_);
-                        try {
-                            Buffer_Sanitizer sanitizer;
-                            std::string response = sanitizer(readData_);
-
-                            if (response == "Exit++") {
-                                console.log("The user is disconnecting from the server!");
-                                running_.store(false, std::memory_order_release);
-                            }
-
-                            return response;
-                        }
-                        catch (const std::runtime_error& e) {
-                            console.log("Sanitizer error: ", e.what());
-                            running_.store(false, std::memory_order_release);
-                            return{};
-                        }
-                    }
-                    else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
-                        console.log("Client disconnected!");
-                        running_.store(false, std::memory_order_release);
-                        return{};
-                    }
-                    else {
-                        console.log("Read error: ", ec.message());
-                        running_.store(false, std::memory_order_release);
-                        return{};
-                    }
+    running_.store(true, std::memory_order_relaxed);
+    error_code ec;
+    if (!ec) {
+        while (running_.load(std::memory_order_acquire)) {
+            try {
+                {
+                    std::lock_guard<std::mutex> lock(read_mtx_);
+                    readData_.clear();
+                    readData_.resize(BUFF_SIZE);
                 }
-                catch (const std::system_error& e) {
-                    console.log("System error in read loop: ", e.what());
+                size_t length;
+                try {
+                    length = socket_.read_some(asio::buffer(readData_), ec);
+                }
+                catch (const boost::system::system_error& e) {
+                    console.log("Socket read error: ", e.what());
                     running_.store(false, std::memory_order_release);
-                    return{};
+                    return{ readError_ };
+                }
+                if (!ec) {
+                    std::lock_guard<std::mutex> lock(read_mtx_);
+                    Buffer_Sanitizer sanitizer;
+                    std::string response = sanitizer(readData_);
+                    console.log("The user response is: ", response);
+                    if (response == "Exit++") {
+                        console.log("The user is disconnecting from the server!");
+                        running_.store(false, std::memory_order_release);
+                        break;
+                    }
+                    return response;
+                }
+                else if (ec == asio::error::eof || ec == asio::error::connection_reset) {
+                    console.log("Client disconnected!");
+                    running_.store(false, std::memory_order_release);
+                    return{ readError_ };
+                }
+                else {
+                    console.log("Read error: ", ec.message());
+                    running_.store(false, std::memory_order_release);
+                    return{ readError_ };
                 }
             }
-        }
-        else if (ec == asio::error::eof) {
-            console.log("Connection closed by server!");
-            running_.store(false, std::memory_order_release);
-            return{};
-        }
-        else {
-            console.log("Read error: ", ec.message());
-            running_.store(false, std::memory_order_release);
-            return{};
+            catch (const std::system_error& e) {
+                console.log("System error in read loop: ", e.what());
+                running_.store(false, std::memory_order_release);
+                return{ readError_ };
+            }
         }
     }
-    catch (const std::exception& e) {
-        console.log("Unexpected error in do_read: ", e.what());
+    else if (ec == asio::error::eof) {
+        console.log("Connection closed by server!");
         running_.store(false, std::memory_order_release);
-        return{};
+        return{ readError_ };
     }
-    catch (...) {
-        console.log("Unknown error in do_read");
+    else {
+        console.log("Read error: ", ec.message());
         running_.store(false, std::memory_order_release);
-        return{};
+        return{ readError_ };
+    }
+}
+
+void TCP_Connection::do_prompt_user(const std::string& message) {
+    error_code ec;
+    if (!ec) {
+        while (running_.load(std::memory_order_acquire)) {
+            try {
+                if (!ec) {
+                    std::lock_guard<std::mutex> lock(write_mtx_);
+                    writeData_.clear();
+                    writeData_.resize(message.size());
+                    std::copy(message.begin(), message.end(), writeData_.begin());
+                    try {
+                        asio::write(socket_, boost::asio::buffer(writeData_), ec_);
+                        break;
+                    }
+                    catch (const boost::system::system_error& e) {
+                        console.log("System error: ", e.what());
+                        running_.store(false, std::memory_order_release);
+                        break;
+                    }
+                }
+                else if (ec == asio::error::eof) {
+                    console.log("Connection closed by server!");
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                else {
+                    console.log("Write error: ", ec.message());
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+            }
+            catch (const std::system_error& e) {
+                console.log("System error: ", e.what());
+                running_.store(false, std::memory_order_release);
+                break;
+            }
+        }
+    }
+    else if (ec == asio::error::eof) {
+        console.log("Connection closed by server!");
+        running_.store(false, std::memory_order_release);
+    }
+    else {
+        console.log("Write error: ", ec.message());
+        running_.store(false, std::memory_order_release);
     }
 }
 

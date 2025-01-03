@@ -52,6 +52,8 @@ private:
 		"To exit the app please type 'Exit++' \n";
 	std::string invalidArgument_{"Invalid Argument. Please enter valid arguments! \n"};
 	std::string userNamePrompt_{"What is your name? "};
+	std::string userIdMessageCreated_{"Your User ID is: "};
+	std::string readError_{ "Read Error!" };
 	std::string userName_;
 	std::string userId_;
 	std::string userResponse_;

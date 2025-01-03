@@ -37,10 +37,12 @@ public:
 	void start(const std::string& message);
 	void do_read();
 	void do_write(const std::string& message);
+	void do_prompt_user(const std::string& message);
 	std::string read_from_user();
 	void stop_process();
 	TCP_Connection(TCP_Connection&& other) noexcept = default;
 	TCP_Connection& operator=(TCP_Connection&& other) noexcept = default;
+	std::atomic<bool> running_;
 private:
 	void stop();
 	void handle_communication();
@@ -50,7 +52,6 @@ private:
 	tcp::socket socket_;
 	error_code ec_;
 	asio::strand<io_context::executor_type> strand_;
-	std::atomic<bool> running_;
 	std::mutex date_mtx_;
 	std::mutex response_mtx_;
 	std::mutex read_mtx_;
@@ -60,6 +61,7 @@ private:
 	std::thread write_thread_;
 	std::string userId_;
 	std::string message_;
+	std::string readError_{ "Read Error!" };
 	std::vector<char> readData_;
 	std::vector<char> writeData_;
 };

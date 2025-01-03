@@ -126,17 +126,21 @@ void Client::do_write() {
 					if (!ec) {
 						std::lock_guard<std::mutex> lock(write_mtx_);
 						message_.clear();
-
+						/*
 						if (userInput_.empty() && username_.empty()) {
 							console.log("What is your name?");
 							std::getline(std::cin, username_);
 							username_ += ": ";
 						}
-
 						if (!username_.empty()) {
 							console.log("Type your message: ");
 							std::getline(cin, userInput_);
 						}
+						
+						*/
+
+						// console.log("Type your message: ");
+						std::getline(cin, userInput_);
 
 						if (userInput_ == "Exit++") {
 							console.log("You are about to exit the chatroom!");
@@ -162,7 +166,7 @@ void Client::do_write() {
 							break;
 						}
 						try {
-							message_ += username_;
+							//message_ += username_;
 							message_ += userInput_;
 							writeData_.clear();
 							writeData_.resize(message_.size());
