@@ -108,7 +108,7 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
         if (!ec) {
             newClient->write_client_id(userIdMessageCreated_);
         }
-
+      
         if (!ClientList.insert_registered_client(userId_, newClient)) {
             console.log("Failed to connect the client!");
             if (!ec && connection->running_.load(std::memory_order_acquire)) {

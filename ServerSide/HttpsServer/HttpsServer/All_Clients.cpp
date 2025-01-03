@@ -7,7 +7,7 @@ All_Clients::All_Clients() = default;
 All_Clients::~All_Clients() = default;
 
 bool All_Clients::add_new_user(std::shared_ptr<Client> newClient) {
-    last_error_ = ClientError::None;
+
     if (!newClient) {
         return false;
         last_error_ = ClientError::NullClient;
@@ -23,14 +23,13 @@ bool All_Clients::add_new_user(std::shared_ptr<Client> newClient) {
 }
 
 bool All_Clients::if_client_exist(const std::shared_ptr<Client>& newClient) const {
-    last_error_ = ClientError::None;
     std::lock_guard<std::mutex> lock(client_mtx_);
     for (const auto& client : all_clients_) {
         if (newClient.get() == client.get()) {
+            last_error_ = ClientError::ClientAlreadyExists;
             return true;
         }
     }
-    last_error_ = ClientError::ClientAlreadyExists;
     return false;
 }
 
@@ -43,7 +42,6 @@ bool All_Clients::if_client_valid(const std::shared_ptr<Client>& newClient) cons
 }
 
 bool All_Clients::insert_registered_client(const std::string& id, const std::shared_ptr<Client> newClient) {
-    last_error_ = ClientError::None;
     if (id.empty()) {
         last_error_ = ClientError::EmptyId;
         return false;
@@ -63,7 +61,6 @@ bool All_Clients::insert_registered_client(const std::string& id, const std::sha
 }
 
 std::optional<std::shared_ptr<Client>> All_Clients::valid_client_getter(const std::string& id) const {
-    last_error_ = ClientError::None;
     std::lock_guard<std::mutex> lock(valid_mtx_);
     auto it = valid_Clients_.find(id);
 
@@ -91,7 +88,6 @@ bool All_Clients::verify_consistency(const std::string& id, const std::shared_pt
 }
 
 bool All_Clients::remove_valid_client(const std::string& id) {
-    last_error_ = ClientError::None;
     std::lock_guard<std::mutex> lock_valid(valid_mtx_);
     auto it = valid_Clients_.find(id);
     if (it != valid_Clients_.end()) {
@@ -103,7 +99,7 @@ bool All_Clients::remove_valid_client(const std::string& id) {
 }
 
 bool All_Clients::delete_client(const std::string& id, const std::shared_ptr<Client> newClient) {
-    last_error_ = ClientError::None;
+
     if (id.empty()) {
         last_error_ = ClientError::EmptyId;
         return false;
@@ -128,7 +124,6 @@ bool All_Clients::delete_client(const std::string& id, const std::shared_ptr<Cli
 }
 
 bool All_Clients::is_being_removed(const std::shared_ptr<Client>& client) const {
-    std::scoped_lock lock(valid_mtx_, client_mtx_);
     return (!if_client_exist(client) && !if_client_valid(client));
 }
 
