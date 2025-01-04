@@ -28,7 +28,6 @@ tcp::socket& TCP_Connection::socket() {
     return socket_;
 }
 
-
 void TCP_Connection::start(const std::string& message) {
 	{
 		std::lock_guard<std::mutex> lock(write_mtx_);
@@ -231,7 +230,7 @@ std::string TCP_Connection::read_from_user() {
                     if (response == "Exit++") {
                         console.log("The user is disconnecting from the server!");
                         running_.store(false, std::memory_order_release);
-                        break;
+                        stop_process();
                     }
                     return response;
                 }
@@ -315,6 +314,7 @@ void TCP_Connection::do_prompt_user(const std::string& message) {
 
 void TCP_Connection::stop_process() {
     std::call_once(stop_flag_, [this]() {
+        // masterServer_.remove_connection(shared_from_this());
         stop();
         });
 }
@@ -339,8 +339,6 @@ void TCP_Connection::stop() {
 	if (write_thread_.joinable()) {
 		write_thread_.join();
 	}
-
-    masterServer_.remove_connection(shared_from_this());
 }
 
 std::string TCP_Connection::set_time() {

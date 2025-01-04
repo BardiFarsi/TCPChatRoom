@@ -74,23 +74,25 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
 
     try {
         error_code ec;
-       
-        if (!ec && connection->running_.load(std::memory_order_acquire)) {
-            connection->do_prompt_user(userNamePrompt_);
-        }
-       
-        userResponse_.clear();
+        bool success;
 
-        if (!ec && connection->running_.load(std::memory_order_acquire)) {
-            userResponse_ = connection->read_from_user();
-        }
+        auto userNameValidation = user_query_prompt_(userNamePrompt_, connection);
+        std::visit(
+            [&](const auto& result) {
+                using T = std::decay_t<decltype(result)>;
+                if constexpr (std::is_same_v<std::string, T>) {
+                    userName_.clear();
+                    userName_ = result;
+                }
+                else {
+                    connection_stop_handler(connection);
+                    success =  result;
+                }
+            }
+            , userNameValidation
+        );
 
-        if (userResponse_ != readError_) {
-            userName_ = sanitizer_(userResponse_);
-        }
-        else {
-            console.log("Error in read handling");
-        }
+        if (!success) return success;
 
         std::shared_ptr<Client> newClient = std::make_shared<Registered_Client>(connection, userName_);
 
@@ -130,37 +132,9 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
         return true;
 
     }
-    catch (const boost::system::system_error& e) {
-        console.log("Network error during sign up: ", e.what());
-        if (connection && connection->running_.load(std::memory_order_acquire)) {
-            connection->do_prompt_user("Network error occurred during registration. Please try again later.");
-            connection->running_.store(false, std::memory_order_release);
-        }
-        return false;
-    }
-    catch (const std::runtime_error& e) {
-        console.log("Sign up process failed! ", e.what());
-        if (connection && connection->running_.load(std::memory_order_acquire)) {
-            connection->do_prompt_user("An unexpected error occurred during registration.");
-            connection->running_.store(false, std::memory_order_release);
-        }
-        return false;
-    }
     catch (...) {
-        console.log("Unknown error during sign up process");
-        if (connection && connection->running_.load(std::memory_order_acquire)) {
-            connection->do_prompt_user("An unexpected error occurred during registration.");
-            connection->running_.store(false, std::memory_order_release);
-        }
-        return false;
+        return catch_handler(connection);
     }
-}
-
-std::string User_Manager::create_registration_announcement(const std::string& userId) {
-    std::string announcement = "Congratulations! Your account has been successfully created. ^_^ \n";
-    announcement += userId;
-    announcement += "\n. Please keep your User ID safe to be able to reconnect to server again. ";
-    return announcement;
 }
 
 bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
@@ -171,60 +145,50 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
 
     try {
         error_code ec;
-        while (true && !ec) {
-            userResponse_.clear();
+        bool loopCondition = true;
+        while (loopCondition && !ec) {
+           
+            auto userNameValidation = user_query_prompt_(userNameLogInPrompt_, connection);
+            std::visit(
+            [&](const auto& result) {
+                    using T = std::decay_t<decltype(result)>;
+                    if constexpr (std::is_same_v<std::string, T>) {
+                        userName_.clear();
+                        userName_ = result;
+                        console.log(userName_);
+                    }
+                    else {
+                        connection_stop_handler(connection);
+                        loopCondition = result;
+                    }
+                }
+                , userNameValidation
+            );
+            
+            if (!loopCondition) break;
 
-            if (!ec && connection->running_.load(std::memory_order_acquire)) {
-                connection->do_prompt_user(userNameLogInPrompt_);
-            } 
-            else {
-                break;
-            }
+            auto userIdValidation = user_query_prompt_(userIdLogInPrompt_, connection);
+            std::visit(
+                [&](const auto& result) {
+                    using T = std::decay_t<decltype(result)>;
+                    if constexpr (std::is_same_v<std::string, T>) {
+                        userId_.clear();
+                        userId_ = result;
+                        console.log(userId_);
+                    }
+                    else {
+                        connection_stop_handler(connection);
+                        loopCondition = result;
+                    }
+                }
+                , userIdValidation
+            );
 
-            if (!ec && connection->running_.load(std::memory_order_acquire)) {
-                userResponse_ = connection->read_from_user();
-            }
-            else {
-                break;
-            }
-
-            if (userResponse_ != readError_) {
-                userName_ = sanitizer_(userResponse_);
-                console.log(userName_);
-            }
-            else {
-                console.log("Error in read handling");
-                break;
-            }
-
-            if (!ec && connection->running_.load(std::memory_order_acquire)) {
-                connection->do_prompt_user(userIdLogInPrompt_);
-            }
-            else {
-                break;
-            }
-
-            userResponse_.clear();
-
-            if (!ec && connection->running_.load(std::memory_order_acquire)) {
-                userResponse_ = connection->read_from_user();
-            } 
-            else {
-                break;
-            }
-
-            if (userResponse_ != readError_) {
-                userId_ = sanitizer_(userResponse_);
-                console.log(userId_);
-            }
-            else {
-                console.log("Error in read handling");
-                break;
-            }
+            if (!loopCondition) break;
 
             if (!ec) {
                 if (ClientList.log_in_client(userId_, userName_, connection)) {
-                    connection->do_prompt_user(successLogIn_);
+                    connection->do_prompt_user(successLogInClientSide_);
                     console.log(successLogIn_);
                     // Function for which service you want to use? 
                     break;
@@ -234,8 +198,50 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
             if (!ec && connection->running_.load(std::memory_order_acquire)) {
                 connection->do_prompt_user(
                     "Oops! Invalid User Name or User ID. Please try again. (×_×)");
+                current_state_ = PromptState::INVALID_INPUT;
             }
         }
+    }
+    catch (...) {
+        return catch_handler(connection);
+    }
+}
+
+std::variant<bool, std::string> User_Manager::user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection) {
+    error_code ec;
+    userResponse_.clear();
+    try {
+        if (!ec && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user(prompt);
+            userResponse_ = connection->read_from_user();
+        }
+
+        if (userResponse_ != readError_ && userResponse_ != readExit_) {
+            std::string userName = sanitizer_(userResponse_);
+            console.log(userName);
+            return userName;
+        }
+
+        current_state_ = PromptState::Connection_Failed;
+        connection->running_.store(false, std::memory_order_release);
+        connection->stop_process();
+        return false;
+    }
+    catch (...) {
+        return catch_handler(connection);
+    }
+}
+
+void User_Manager::connection_stop_handler(std::shared_ptr<TCP_Connection> connection) {
+    console.log("Error in read handling or client is leaving");
+    current_state_ = PromptState::EXIT;
+    connection->running_.store(false, std::memory_order_release);
+    connection->stop_process();
+}
+
+bool User_Manager::catch_handler(std::shared_ptr<TCP_Connection> connection) {
+    try {
+        throw;  
     }
     catch (const boost::system::system_error& e) {
         console.log("Network error during sign up: ", e.what());
@@ -243,6 +249,7 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("Network error occurred during registration. Please try again later.");
             connection->running_.store(false, std::memory_order_release);
         }
+        current_state_ = PromptState::Connection_Failed;
         return false;
     }
     catch (const std::runtime_error& e) {
@@ -251,6 +258,7 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("An unexpected error occurred during registration.");
             connection->running_.store(false, std::memory_order_release);
         }
+        current_state_ = PromptState::Connection_Failed;
         return false;
     }
     catch (...) {
@@ -259,6 +267,7 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("An unexpected error occurred during registration.");
             connection->running_.store(false, std::memory_order_release);
         }
+        current_state_ = PromptState::Connection_Failed;
         return false;
     }
 }
@@ -285,4 +294,11 @@ std::string User_Manager::create_new_id() {
     return std::format("uid{:0{}}:{:0{}x}",
         timestamp, TIMESTAMP_LENGTH,
         random_component, RANDOM_LENGTH);
+}
+
+std::string User_Manager::create_registration_announcement(const std::string& userId) {
+    std::string announcement = "Congratulations! Your account has been successfully created. ^_^ \n";
+    announcement += userId;
+    announcement += "\n. Please keep your User ID safe to be able to reconnect to server again. ";
+    return announcement;
 }

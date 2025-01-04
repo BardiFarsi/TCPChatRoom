@@ -14,10 +14,10 @@
 'TCPServer.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140d.dll'. Symbol loading disabled by Include/Exclude setting.
 'TCPServer.exe' (Win32): Loaded 'C:\Windows\System32\vcruntime140_1d.dll'. Symbol loading disabled by Include/Exclude setting.
 'TCPServer.exe' (Win32): Loaded 'C:\Windows\System32\ucrtbased.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 213312 has exited with code 0 (0x0).
+The thread 191912 has exited with code 0 (0x0).
 'TCPServer.exe' (Win32): Loaded 'C:\Windows\System32\kernel.appcore.dll'. Symbol loading disabled by Include/Exclude setting.
-The thread 210892 has exited with code 3221225786 (0xc000013a).
-The thread 177548 has exited with code 3221225786 (0xc000013a).
-The thread 156268 has exited with code 3221225786 (0xc000013a).
-The thread 209124 has exited with code 3221225786 (0xc000013a).
-The program '[216196] TCPServer.exe' has exited with code 3221225786 (0xc000013a).
+The thread 207556 has exited with code 3221225786 (0xc000013a).
+The thread 153840 has exited with code 3221225786 (0xc000013a).
+The thread 196560 has exited with code 3221225786 (0xc000013a).
+The thread 210748 has exited with code 3221225786 (0xc000013a).
+The program '[166496] TCPServer.exe' has exited with code 3221225786 (0xc000013a).
