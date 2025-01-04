@@ -75,13 +75,13 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
     try {
         error_code ec;
        
-        if (connection->running_.load(std::memory_order_acquire)) {
+        if (!ec && connection->running_.load(std::memory_order_acquire)) {
             connection->do_prompt_user(userNamePrompt_);
         }
        
         userResponse_.clear();
 
-        if (connection->running_.load(std::memory_order_acquire)) {
+        if (!ec && connection->running_.load(std::memory_order_acquire)) {
             userResponse_ = connection->read_from_user();
         }
 
@@ -164,11 +164,104 @@ std::string User_Manager::create_registration_announcement(const std::string& us
 }
 
 bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
+    if (!connection) {
+        console.log("Invalid connection pointer in sign up process");
+        return false;
+    }
 
-	console.log("Logging in..."); // NOT CREATED YET
-	return true; 
+    try {
+        error_code ec;
+        while (true && !ec) {
+            userResponse_.clear();
+
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                connection->do_prompt_user(userNameLogInPrompt_);
+            } 
+            else {
+                break;
+            }
+
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                userResponse_ = connection->read_from_user();
+            }
+            else {
+                break;
+            }
+
+            if (userResponse_ != readError_) {
+                userName_ = sanitizer_(userResponse_);
+                console.log(userName_);
+            }
+            else {
+                console.log("Error in read handling");
+                break;
+            }
+
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                connection->do_prompt_user(userIdLogInPrompt_);
+            }
+            else {
+                break;
+            }
+
+            userResponse_.clear();
+
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                userResponse_ = connection->read_from_user();
+            } 
+            else {
+                break;
+            }
+
+            if (userResponse_ != readError_) {
+                userId_ = sanitizer_(userResponse_);
+                console.log(userId_);
+            }
+            else {
+                console.log("Error in read handling");
+                break;
+            }
+
+            if (!ec) {
+                if (ClientList.log_in_client(userId_, userName_, connection)) {
+                    connection->do_prompt_user(successLogIn_);
+                    console.log(successLogIn_);
+                    // Function for which service you want to use? 
+                    break;
+                } 
+            }
+            
+            if (!ec && connection->running_.load(std::memory_order_acquire)) {
+                connection->do_prompt_user(
+                    "Oops! Invalid User Name or User ID. Please try again. (×_×)");
+            }
+        }
+    }
+    catch (const boost::system::system_error& e) {
+        console.log("Network error during sign up: ", e.what());
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("Network error occurred during registration. Please try again later.");
+            connection->running_.store(false, std::memory_order_release);
+        }
+        return false;
+    }
+    catch (const std::runtime_error& e) {
+        console.log("Sign up process failed! ", e.what());
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("An unexpected error occurred during registration.");
+            connection->running_.store(false, std::memory_order_release);
+        }
+        return false;
+    }
+    catch (...) {
+        console.log("Unknown error during sign up process");
+        if (connection && connection->running_.load(std::memory_order_acquire)) {
+            connection->do_prompt_user("An unexpected error occurred during registration.");
+            connection->running_.store(false, std::memory_order_release);
+        }
+        return false;
+    }
 }
-
 
 std::string User_Manager::client_id_generator() {
     std::string id;

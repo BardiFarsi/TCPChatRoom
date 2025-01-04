@@ -5,7 +5,6 @@
 #include <array>
 #include <type_traits>
 #include <mutex>
-#include <span>
 #include "TCP_Server.h"
 
 // Concept to validate types

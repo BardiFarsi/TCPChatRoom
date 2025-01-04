@@ -13,78 +13,117 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{ef77bfd2-6d49-4eab-8265-5860d3929e28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\obj">
+      <UniqueIdentifier>{f78f74a1-a621-4dd6-8cb5-d9f378fed617}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\list">
+      <UniqueIdentifier>{2cebf331-79df-4ba1-985f-160bd9728884}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\session">
+      <UniqueIdentifier>{9d95a145-6a83-41d9-92cd-289873ed28c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\server">
+      <UniqueIdentifier>{a8dda53b-0b17-4d9a-84b2-1ca4215c1b17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\client">
+      <UniqueIdentifier>{cdac3ac5-d249-4fde-b3bc-a37ca752527c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\API">
+      <UniqueIdentifier>{e3718b03-95ab-41be-a660-1c6c11d524be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\client">
+      <UniqueIdentifier>{f2f43a11-5858-43fa-b792-6f66d5214e72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\server">
+      <UniqueIdentifier>{21de26f5-49ce-4a86-a5d7-8a6d9256c5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\session">
+      <UniqueIdentifier>{794ba1f0-7e1a-4ed0-9345-3d6b97d68b28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{9b9da270-f227-48e4-9766-0cdc181e2dd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\list">
+      <UniqueIdentifier>{e459d969-f6ef-4e64-aabc-0e291336829a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\API">
+      <UniqueIdentifier>{5f212dad-96b2-4253-b3bf-ca1e546ff383}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LOGGER.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TCP_Server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TCP_Connection.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Client.cpp">
+      <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="Online_Clients.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="User_Manager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="Registered_Client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="All_Clients.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="Master_Server.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="TCP_Server.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="TCP_Connection.cpp">
+      <Filter>Source Files\session</Filter>
+    </ClCompile>
+    <ClCompile Include="LOGGER.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="All_Clients.cpp">
+      <Filter>Source Files\list</Filter>
+    </ClCompile>
+    <ClCompile Include="User_Manager.cpp">
+      <Filter>Source Files\API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="LOGGER.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TCP_Server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TCP_Connection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="backup.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="Buffer_Sanitizer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="LOGGER.h">
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="Span_Factory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Online_Clients.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="User_Manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Registered_Client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="All_Clients.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Master_Server.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="Message.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\obj</Filter>
+    </ClInclude>
+    <ClInclude Include="All_Clients.h">
+      <Filter>Header Files\list</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="Online_Clients.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="Registered_Client.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="TCP_Connection.h">
+      <Filter>Header Files\session</Filter>
+    </ClInclude>
+    <ClInclude Include="Master_Server.h">
+      <Filter>Header Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="TCP_Server.h">
+      <Filter>Header Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="User_Manager.h">
+      <Filter>Header Files\API</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

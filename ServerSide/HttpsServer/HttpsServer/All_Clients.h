@@ -32,6 +32,8 @@ public:
     bool insert_registered_client(const std::string& id, const std::shared_ptr<Client> newClient);
     bool remove_valid_client(const std::string& id);
     bool delete_client(const std::string& id, const std::shared_ptr<Client> newClient);
+    bool log_in_client(const std::string& userId, const std::string& userName, 
+        std::shared_ptr<TCP_Connection> connection);
     std::optional<std::shared_ptr<Client>> valid_client_getter(const std::string& id) const;
     size_t get_total_clients() const;
     size_t get_registered_clients() const;

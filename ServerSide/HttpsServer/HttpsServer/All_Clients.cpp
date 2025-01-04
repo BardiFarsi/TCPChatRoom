@@ -41,6 +41,19 @@ bool All_Clients::if_client_valid(const std::shared_ptr<Client>& newClient) cons
         });
 }
 
+bool All_Clients::log_in_client(const std::string& userId, const std::string& userName, 
+    std::shared_ptr<TCP_Connection> connection) {
+    std::lock_guard<std::mutex> lock(valid_mtx_);
+    auto it = valid_Clients_.find(userId);
+    if (it != valid_Clients_.end()) {
+        if (userName == it->second->get_client_name()) {
+            it->second->connection_ = std::move(connection);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool All_Clients::insert_registered_client(const std::string& id, const std::shared_ptr<Client> newClient) {
     if (id.empty()) {
         last_error_ = ClientError::EmptyId;
@@ -53,8 +66,8 @@ bool All_Clients::insert_registered_client(const std::string& id, const std::sha
 
     if (!verify_consistency(id, newClient)) {
         std::lock_guard<std::mutex> lock(valid_mtx_);
-        valid_Clients_.emplace(id, newClient);
-        return true;
+        auto [it, inserted] = valid_Clients_.emplace(id, newClient);
+        return inserted;
     }
     last_error_ = ClientError::InvalidState;
     return false;

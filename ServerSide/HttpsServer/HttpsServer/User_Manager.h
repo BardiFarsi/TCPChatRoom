@@ -50,9 +50,13 @@ private:
 	std::string startingPrompt_ = "To Sign Up as new client type '1'. \n"
 		"To Log In into your account type '2'. \n"
 		"To exit the app please type 'Exit++' \n";
+	std::string userNameLogInPrompt_{ 
+		"To Log In please type your Name below: " };
+	std::string userIdLogInPrompt_{ "Please type your User ID below: " };
 	std::string invalidArgument_{"Invalid Argument. Please enter valid arguments! \n"};
 	std::string userNamePrompt_{"What is your name? "};
 	std::string userIdMessageCreated_{"Your User ID is: "};
+	std::string successLogIn_{"Client Successfully Logged In"};
 	std::string readError_{ "Read Error!" };
 	std::string userName_;
 	std::string userId_;

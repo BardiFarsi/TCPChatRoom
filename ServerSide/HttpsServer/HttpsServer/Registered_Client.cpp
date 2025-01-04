@@ -19,23 +19,7 @@ std::string Registered_Client::get_client_name() const {
 void Registered_Client::write_client_id(const std::string& id) {
 	clientId_ = id;
 }
-/*
 
-std::shared_ptr<TCP_Connection> Registered_Client::get_connection() const {
-	return std::make_shared<TCP_Connection>(connection_);
+void Registered_Client::write_client_name(const std::string& name) {
+	name_ = name;
 }
-*/
-
-
-/*
-
-bool Registered_Client::set_connection(const std::shared_ptr<TCP_Connection>& connection) {
-	if (!connection) {
-		return false;
-	}
-	connection_ = connection;  
-	return true;
-
-}
-
-*/
