@@ -17,7 +17,6 @@
 #include <utility>
 #include <boost/asio.hpp>
 
-
 namespace asio = boost::asio;
 using io_context = asio::io_context;
 using tcp = asio::ip::tcp;
@@ -39,6 +38,7 @@ public:
 	void do_read();
 	void do_broadcast(const std::string& message);
 	void do_prompt_user(const std::string& message);
+	void do_write_partner(tcp::socket socket, const std::string& message);
 	std::string read_from_user();
 	void stop_process();
 	TCP_Connection(TCP_Connection&& other) noexcept = default;

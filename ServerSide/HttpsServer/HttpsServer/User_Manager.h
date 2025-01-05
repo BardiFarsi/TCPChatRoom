@@ -53,7 +53,6 @@ private:
 	PromptState current_state_ = PromptState::INITIAL;
 	Buffer_Sanitizer sanitizer_; 
 	Master_Server& masterServer_;
-
 	std::random_device rd;
 	std::mt19937_64 gen;
 };

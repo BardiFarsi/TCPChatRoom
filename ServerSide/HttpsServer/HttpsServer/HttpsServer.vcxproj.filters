@@ -90,6 +90,9 @@
     <ClCompile Include="Prompt.cpp">
       <Filter>Source Files\obj</Filter>
     </ClCompile>
+    <ClCompile Include="Pair_Chat_Server.cpp">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="backup.h">
@@ -133,6 +136,9 @@
     </ClInclude>
     <ClInclude Include="Prompt.h">
       <Filter>Header Files\obj</Filter>
+    </ClInclude>
+    <ClInclude Include="Pair_Chat_Server.h">
+      <Filter>Header Files\server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

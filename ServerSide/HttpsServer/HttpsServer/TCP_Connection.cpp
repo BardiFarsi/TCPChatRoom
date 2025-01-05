@@ -312,6 +312,54 @@ void TCP_Connection::do_prompt_user(const std::string& message) {
     }
 }
 
+void TCP_Connection::do_write_partner(tcp::socket socket, const std::string& message) {
+    error_code ec;
+    if (!ec) {
+        while (running_.load(std::memory_order_acquire)) {
+            try {
+                if (!ec) {
+                    std::lock_guard<std::mutex> lock(write_mtx_);
+                    writeData_.clear();
+                    writeData_.resize(message.size());
+                    std::copy(message.begin(), message.end(), writeData_.begin());
+                    try {
+                        asio::write(socket, boost::asio::buffer(writeData_), ec_);
+                        break;
+                    }
+                    catch (const boost::system::system_error& e) {
+                        console.log("System error: ", e.what());
+                        running_.store(false, std::memory_order_release);
+                        break;
+                    }
+                }
+                else if (ec == asio::error::eof) {
+                    console.log("Connection closed by server!");
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+                else {
+                    console.log("Write error: ", ec.message());
+                    running_.store(false, std::memory_order_release);
+                    break;
+                }
+            }
+            catch (const std::system_error& e) {
+                console.log("System error: ", e.what());
+                running_.store(false, std::memory_order_release);
+                break;
+            }
+        }
+    }
+    else if (ec == asio::error::eof) {
+        console.log("Connection closed by server!");
+        running_.store(false, std::memory_order_release);
+    }
+    else {
+        console.log("Write error: ", ec.message());
+        running_.store(false, std::memory_order_release);
+    }
+}
+
 void TCP_Connection::stop_process() {
     std::call_once(stop_flag_, [this]() {
         // masterServer_.remove_connection(shared_from_this());

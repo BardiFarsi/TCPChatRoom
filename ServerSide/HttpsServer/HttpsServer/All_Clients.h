@@ -8,6 +8,7 @@
 #include <optional> 
 #include <mutex>
 
+// Stimulating the replica
 class All_Clients {
 public:
     enum class ClientError {
