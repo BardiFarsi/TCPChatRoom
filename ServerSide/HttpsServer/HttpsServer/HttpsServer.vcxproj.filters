@@ -52,15 +52,15 @@
     <Filter Include="Source Files\API">
       <UniqueIdentifier>{5f212dad-96b2-4253-b3bf-ca1e546ff383}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\obj">
+      <UniqueIdentifier>{13af34d3-c029-4afe-aefc-f4ba43f5e3b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Client.cpp">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="Online_Clients.cpp">
       <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="Registered_Client.cpp">
@@ -83,6 +83,12 @@
     </ClCompile>
     <ClCompile Include="User_Manager.cpp">
       <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="Online_Clients.cpp">
+      <Filter>Source Files\list</Filter>
+    </ClCompile>
+    <ClCompile Include="Prompt.cpp">
+      <Filter>Source Files\obj</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -107,9 +113,6 @@
     <ClInclude Include="Client.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
-    <ClInclude Include="Online_Clients.h">
-      <Filter>Header Files\client</Filter>
-    </ClInclude>
     <ClInclude Include="Registered_Client.h">
       <Filter>Header Files\client</Filter>
     </ClInclude>
@@ -124,6 +127,12 @@
     </ClInclude>
     <ClInclude Include="User_Manager.h">
       <Filter>Header Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="Online_Clients.h">
+      <Filter>Header Files\list</Filter>
+    </ClInclude>
+    <ClInclude Include="Prompt.h">
+      <Filter>Header Files\obj</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

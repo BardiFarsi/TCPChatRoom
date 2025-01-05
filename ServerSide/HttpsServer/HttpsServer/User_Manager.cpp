@@ -11,35 +11,36 @@ void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> conn
         PromptState::Connection_Failed;
         return;
     }
-
+    
     try {
         error_code ec;
+        std::string userResponse;
+        std::string handlerPrompt;
         while (current_state_ != PromptState::EXIT && !ec) {
-            std::lock_guard<std::mutex> lock(userResponse_mtx_);
+            handlerPrompt.clear();
+            userResponse.clear();
 
             if (current_state_ == PromptState::INVALID_INPUT) {
-                handlerPrompt_ = invalidArgument_;
+                handlerPrompt = g_invalidArgument;
             }
 
-            handlerPrompt_ += startingPrompt_;
+            handlerPrompt += g_startingPrompt;
 
             if (connection->running_.load(std::memory_order_consume)) {
-                connection->do_prompt_user(handlerPrompt_);
+                connection->do_prompt_user(handlerPrompt);
             }
 
             if (connection->running_.load(std::memory_order_consume)) {
-                userResponse_ = connection->read_from_user();
+                
+                userResponse = connection->read_from_user();
             }
 
-            if (userResponse_ != readError_) {
-                handle_user_response(connection);
+            if (userResponse != g_readError) {
+                handle_user_response(userResponse, connection);
             }
             else {
                 console.log("Error in read handling");
             }
-
-            handlerPrompt_.clear();
-            userResponse_.clear();
         }
     }
     catch (const std::exception& e) {
@@ -48,16 +49,17 @@ void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> conn
     }
 }
 
-void User_Manager::handle_user_response(const std::shared_ptr<TCP_Connection> conncetion) {
-    if (userResponse_ == "1") {
+void User_Manager::handle_user_response(const std::string& userResponse, const std::shared_ptr<TCP_Connection> conncetion) {
+
+    if (userResponse == "1") {
         user_sign_up(conncetion);
         current_state_ = PromptState::EXIT;
     }
-    else if (userResponse_ == "2") {
+    else if (userResponse == "2") {
         user_log_in(conncetion);
         current_state_ = PromptState::EXIT;
     }
-    else if (userResponse_ == "Exit++") {
+    else if (userResponse == "Exit++") {
         current_state_ = PromptState::EXIT;
         conncetion->stop_process();
     }
@@ -74,15 +76,40 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
 
     try {
         error_code ec;
-        bool success;
+        std::string localEmail;
+        std::string localId;
+        std::string localName;
+        bool success{true};
 
-        auto userNameValidation = user_query_prompt_(userNamePrompt_, connection);
+        auto userEmailValidation = user_query_prompt_(g_emailRegistPrompt, connection);
         std::visit(
             [&](const auto& result) {
                 using T = std::decay_t<decltype(result)>;
                 if constexpr (std::is_same_v<std::string, T>) {
-                    userName_.clear();
-                    userName_ = result;
+                    localEmail.clear();
+                    localEmail = result;
+                    success &= !ClientList.if_client_exist(localEmail);
+                    if (!success) {
+                        connection->do_prompt_user(g_emailAddressExist);
+                        master_entrance_handeler(std::move(connection));
+                    }
+                }
+                else {
+                    connection_stop_handler(connection);
+                    success &= result;
+                }
+            }
+            , userEmailValidation
+        );
+
+        if (!success) return success;
+       
+        auto userNameValidation = user_query_prompt_(g_userNamePrompt, connection);
+        std::visit(
+            [&](const auto& result) {
+                using T = std::decay_t<decltype(result)>;
+                if constexpr (std::is_same_v<std::string, T>) {
+                    localName = result;
                 }
                 else {
                     connection_stop_handler(connection);
@@ -94,7 +121,7 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
 
         if (!success) return success;
 
-        std::shared_ptr<Client> newClient = std::make_shared<Registered_Client>(connection, userName_);
+        std::shared_ptr<Client> newClient = std::make_shared<Registered_Client>(connection, localId, localEmail);
 
         if (!ClientList.add_new_user(newClient)) {
             if (!ec && connection->running_.load(std::memory_order_acquire)) {
@@ -103,15 +130,15 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
             console.log("Connection failed during Sign Up process");
             return false;
         }
-
-        userId_ = client_id_generator();
-        userIdMessageCreated_ += userId_;
+        std::string userIdMessage = g_userIdMessageCreated;
+        localId = client_id_generator();
+        userIdMessage += localId;
 
         if (!ec) {
-            newClient->write_client_id(userIdMessageCreated_);
+            newClient->write_client_id(g_userIdMessageCreated);
         }
       
-        if (!ClientList.insert_registered_client(userId_, newClient)) {
+        if (!ClientList.insert_registered_client(localId, localEmail, newClient)) {
             console.log("Failed to connect the client!");
             if (!ec && connection->running_.load(std::memory_order_acquire)) {
                 connection->do_prompt_user(
@@ -125,7 +152,7 @@ bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
         console.log("Client Successfully Registered");
 
         if (!ec && connection->running_.load(std::memory_order_acquire)) {
-            newClient->connection_->do_prompt_user(create_registration_announcement(userId_));
+            newClient->connection_->do_prompt_user(create_registration_announcement(localId));
         }
         
         user_log_in(newClient->connection_);
@@ -145,51 +172,53 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
 
     try {
         error_code ec;
-        bool loopCondition = true;
-        while (loopCondition && !ec) {
+        std::string localEmail;
+        std::string localId;
+        bool logging = true;
+        while (logging && !ec) {
            
-            auto userNameValidation = user_query_prompt_(userNameLogInPrompt_, connection);
+            auto userNameValidation = user_query_prompt_(g_userEmailLoginPrompt, connection);
             std::visit(
             [&](const auto& result) {
                     using T = std::decay_t<decltype(result)>;
                     if constexpr (std::is_same_v<std::string, T>) {
-                        userName_.clear();
-                        userName_ = result;
-                        console.log(userName_);
+                        localEmail.clear();
+                        localEmail = result;
+                        console.log(localEmail);
                     }
                     else {
                         connection_stop_handler(connection);
-                        loopCondition = result;
+                        logging = result;
                     }
                 }
                 , userNameValidation
             );
             
-            if (!loopCondition) break;
+            if (!logging) break;
 
-            auto userIdValidation = user_query_prompt_(userIdLogInPrompt_, connection);
+            auto userIdValidation = user_query_prompt_(g_userIdLoginPrompt, connection);
             std::visit(
                 [&](const auto& result) {
                     using T = std::decay_t<decltype(result)>;
                     if constexpr (std::is_same_v<std::string, T>) {
-                        userId_.clear();
-                        userId_ = result;
-                        console.log(userId_);
+                        localId.clear();
+                        localId = result;
+                        console.log(localId);
                     }
                     else {
                         connection_stop_handler(connection);
-                        loopCondition = result;
+                        logging = result;
                     }
                 }
                 , userIdValidation
             );
 
-            if (!loopCondition) break;
+            if (!logging) break;
 
             if (!ec) {
-                if (ClientList.log_in_client(userId_, userName_, connection)) {
-                    connection->do_prompt_user(successLogInClientSide_);
-                    console.log(successLogIn_);
+                if (ClientList.log_in_client(localId, localEmail, connection)) {
+                    connection->do_prompt_user(g_successLogInClientSide);
+                    console.log(g_successLogIn);
                     // Function for which service you want to use? 
                     break;
                 } 
@@ -209,17 +238,18 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
 
 std::variant<bool, std::string> User_Manager::user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection) {
     error_code ec;
-    userResponse_.clear();
     try {
+        std::string localResponse;
         if (!ec && connection->running_.load(std::memory_order_acquire)) {
             connection->do_prompt_user(prompt);
-            userResponse_ = connection->read_from_user();
+            localResponse = connection->read_from_user();
         }
 
-        if (userResponse_ != readError_ && userResponse_ != readExit_) {
-            std::string userName = sanitizer_(userResponse_);
-            console.log(userName);
-            return userName;
+        if (localResponse != g_readError && localResponse != g_readExit && localResponse != "" && localResponse != "\n") 
+        {
+            std::string prompt = sanitizer_(localResponse);
+            console.log(g_defaultConsoleUserResponse, prompt);
+            return prompt;
         }
 
         current_state_ = PromptState::Connection_Failed;

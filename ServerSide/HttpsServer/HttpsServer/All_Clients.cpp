@@ -13,7 +13,7 @@ bool All_Clients::add_new_user(std::shared_ptr<Client> newClient) {
         last_error_ = ClientError::NullClient;
     }
 
-    if (!if_client_exist(newClient)) {
+    if (!if_client_exist(newClient->get_client_email())) {
         std::lock_guard<std::mutex> lock(client_mtx_);
         all_clients_.push_back(newClient);
         return true;
@@ -22,10 +22,10 @@ bool All_Clients::add_new_user(std::shared_ptr<Client> newClient) {
     return false;
 }
 
-bool All_Clients::if_client_exist(const std::shared_ptr<Client>& newClient) const {
+bool All_Clients::if_client_exist(const std::string& email) const {
     std::lock_guard<std::mutex> lock(client_mtx_);
     for (const auto& client : all_clients_) {
-        if (newClient.get() == client.get()) {
+        if (email == client->get_client_email()) {
             last_error_ = ClientError::ClientAlreadyExists;
             return true;
         }
@@ -33,20 +33,20 @@ bool All_Clients::if_client_exist(const std::shared_ptr<Client>& newClient) cons
     return false;
 }
 
-bool All_Clients::if_client_valid(const std::shared_ptr<Client>& newClient) const {
+bool All_Clients::if_client_valid(const std::string& id, const std::string& email) const {
     std::lock_guard<std::mutex> lock(valid_mtx_);
-    return std::any_of(valid_Clients_.begin(), valid_Clients_.end(),
-        [&newClient](const auto& pair) {  
-            return newClient.get() == pair.second.get();
-        });
+    if (const auto it = valid_Clients_.find(id); it != valid_Clients_.end()) {
+        return email == it->second->get_client_email();
+    }
+    return false;
 }
 
-bool All_Clients::log_in_client(const std::string& userId, const std::string& userName, 
+// Password can be replaced here
+bool All_Clients::log_in_client(const std::string& userId, const std::string& email, 
     std::shared_ptr<TCP_Connection> connection) {
     std::lock_guard<std::mutex> lock(valid_mtx_);
-    auto it = valid_Clients_.find(userId);
-    if (it != valid_Clients_.end()) {
-        if (userName == it->second->get_client_name()) {
+    if (auto it = valid_Clients_.find(userId); it != valid_Clients_.end()) {
+        if (email == it->second->get_client_email()) {
             it->second->connection_ = std::move(connection);
             return true;
         }
@@ -54,9 +54,9 @@ bool All_Clients::log_in_client(const std::string& userId, const std::string& us
     return false;
 }
 
-bool All_Clients::insert_registered_client(const std::string& id, const std::shared_ptr<Client> newClient) {
-    if (id.empty()) {
-        last_error_ = ClientError::EmptyId;
+bool All_Clients::insert_registered_client(const std::string& id, std::string email, const std::shared_ptr<Client> newClient) {
+    if (id.empty() && email.empty()) {
+        last_error_ = ClientError::EmptyType;
         return false;
     }
     if (!newClient) {
@@ -64,7 +64,7 @@ bool All_Clients::insert_registered_client(const std::string& id, const std::sha
         return false;
     }
 
-    if (!verify_consistency(id, newClient)) {
+    if (!verify_consistency(id, email)) {
         std::lock_guard<std::mutex> lock(valid_mtx_);
         auto [it, inserted] = valid_Clients_.emplace(id, newClient);
         return inserted;
@@ -88,22 +88,22 @@ bool All_Clients::is_id_taken(const std::string& id) const {
     return valid_client_getter(id).has_value();;
 }
 
-bool All_Clients::verify_consistency(const std::string& id, const std::shared_ptr<Client> newClient) const {
-    if (id.empty() || !newClient) {
+bool All_Clients::verify_consistency(const std::string& id, const std::string& email) const {
+    if (id.empty() || !email.empty()) {
         return false;
     }
 
     return (
-        if_client_exist(newClient) && 
-        if_client_valid(newClient) &&
+        if_client_exist(email) && 
+        if_client_valid(id, email) &&
         is_id_taken(id)
         );
 }
 
 bool All_Clients::remove_valid_client(const std::string& id) {
     std::lock_guard<std::mutex> lock_valid(valid_mtx_);
-    auto it = valid_Clients_.find(id);
-    if (it != valid_Clients_.end()) {
+    
+    if (auto it = valid_Clients_.find(id); it != valid_Clients_.end()) {
         valid_Clients_.erase(it);
         return true;
     }
@@ -111,33 +111,32 @@ bool All_Clients::remove_valid_client(const std::string& id) {
     return false;
 }
 
-bool All_Clients::delete_client(const std::string& id, const std::shared_ptr<Client> newClient) {
+bool All_Clients::delete_client(const std::string& email) {
 
-    if (id.empty()) {
-        last_error_ = ClientError::EmptyId;
-        return false;
-    }
-    if (!newClient) {
-        last_error_ = ClientError::NullClient;
+    if (email.empty()) {
+        last_error_ = ClientError::EmptyType;
         return false;
     }
 
-    bool removed = is_being_removed(newClient) && remove_valid_client(id);
-    if (removed) {
-        std::lock_guard<std::mutex> lock(client_mtx_);
-        auto it = std::find(all_clients_.begin(), all_clients_.end(), newClient);
-        if (it != all_clients_.end()) {
-            all_clients_.erase(it);
-            return true;
-        }
+    std::lock_guard<std::mutex> lock(client_mtx_);
+
+    if (auto it = std::find_if(all_clients_.begin(), all_clients_.end(),
+        [&email](const auto& client) { return email == client->get_client_email(); });
+        it != all_clients_.end())
+    {
+        all_clients_.erase(it);
+        return true;
     }
 
     last_error_ = ClientError::RemovalFailed;
     return false;
 }
 
-bool All_Clients::is_being_removed(const std::shared_ptr<Client>& client) const {
-    return (!if_client_exist(client) && !if_client_valid(client));
+bool All_Clients::delete_consistency(const std::string& id, const std::string& email) {
+    if (delete_client(email) && remove_valid_client(id)) {
+        return true;
+    }
+    return false;
 }
 
 size_t All_Clients::get_total_clients() const {

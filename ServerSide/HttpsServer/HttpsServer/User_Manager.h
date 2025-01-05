@@ -6,6 +6,7 @@
 #include "All_Clients.h"
 #include "TCP_Connection.h"
 #include "Message.h"
+#include "Prompt.h"
 #include <string>
 #include <mutex>
 #include <memory>
@@ -29,7 +30,7 @@ public:
 	User_Manager(Master_Server& masterServer);
 	~User_Manager();
 	void master_entrance_handeler(std::shared_ptr<TCP_Connection> connection);
-	void handle_user_response(const std::shared_ptr<TCP_Connection> conncetion);
+	void handle_user_response(const std::string& userResponse, const std::shared_ptr<TCP_Connection> conncetion);
 
 private:
 	enum class PromptState {
@@ -52,24 +53,7 @@ private:
 	PromptState current_state_ = PromptState::INITIAL;
 	Buffer_Sanitizer sanitizer_; 
 	Master_Server& masterServer_;
-	const std::string readError_{ "Read Error!" };
-	const std::string readExit_{ "Exit++" };
-	std::string startingPrompt_ = "To Sign Up as new client type '1'. \n"
-		"To Log In into your account type '2'. \n"
-		"To exit the app please type 'Exit++' \n";
-	std::string userNameLogInPrompt_{ 
-		"To Log In please type your Name below or Exit++ to close the connection: " };
-	std::string userIdLogInPrompt_{ "Please type your User ID below or Exit++ to close the connection: " };
-	std::string invalidArgument_{"Invalid Argument. Please enter valid arguments! \n"};
-	std::string userNamePrompt_{"What is your name? "};
-	std::string userIdMessageCreated_{"Your User ID is: "};
-	std::string successLogIn_{"Client Successfully Logged In"};
-	std::string successLogInClientSide_{ "Loged In Successfully" };
-	std::string userName_;
-	std::string userId_;
-	std::string userResponse_;
-	std::string handlerPrompt_; 
-	std::mutex userResponse_mtx_;
+
 	std::random_device rd;
 	std::mt19937_64 gen;
 };

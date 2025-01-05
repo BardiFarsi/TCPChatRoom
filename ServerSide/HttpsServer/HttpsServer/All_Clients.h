@@ -12,7 +12,7 @@ class All_Clients {
 public:
     enum class ClientError {
         None,
-        EmptyId,
+        EmptyType,
         NullClient,
         ClientNotFound,
         ClientAlreadyExists,
@@ -24,15 +24,15 @@ public:
     All_Clients();
     ~All_Clients();
     bool add_new_user(std::shared_ptr<Client> newClient);
-    bool if_client_exist(const std::shared_ptr<Client>& newClient) const;
-    bool if_client_valid(const std::shared_ptr<Client>& newClient) const;
+    bool if_client_exist(const std::string& email) const;
+    bool if_client_valid(const std::string& id, const std::string& email) const;
     bool is_id_taken(const std::string& id) const;
-    bool verify_consistency(const std::string& id, const std::shared_ptr<Client> newClient) const;
-    bool is_being_removed(const std::shared_ptr<Client>& client) const;
-    bool insert_registered_client(const std::string& id, const std::shared_ptr<Client> newClient);
+    bool verify_consistency(const std::string& id, const std::string& email) const;
+    bool insert_registered_client(const std::string& id, std::string email, const std::shared_ptr<Client> newClient);
     bool remove_valid_client(const std::string& id);
-    bool delete_client(const std::string& id, const std::shared_ptr<Client> newClient);
-    bool log_in_client(const std::string& userId, const std::string& userName, 
+    bool delete_consistency(const std::string& id, const std::string& email);
+    bool delete_client(const std::string& email);
+    bool log_in_client(const std::string& userId, const std::string& email, 
         std::shared_ptr<TCP_Connection> connection);
     std::optional<std::shared_ptr<Client>> valid_client_getter(const std::string& id) const;
     size_t get_total_clients() const;

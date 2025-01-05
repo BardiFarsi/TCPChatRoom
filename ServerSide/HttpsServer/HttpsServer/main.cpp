@@ -1,5 +1,5 @@
 #include "LOGGER.h"
-
+#include "Prompt.h"
 #include "TCP_Connection.h"
 #include "All_Clients.h"
 #include "Master_Server.h"

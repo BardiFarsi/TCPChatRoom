@@ -1,7 +1,7 @@
 #include "Registered_Client.h"
 
-Registered_Client::Registered_Client(std::shared_ptr<TCP_Connection> connection, std::string name) :
-	Client(connection), name_(name) 
+Registered_Client::Registered_Client(std::shared_ptr<TCP_Connection> connection, std::string name, std::string email) :
+	Client(connection, email), name_(name)
 {
 	clientHasId.store(false, std::memory_order_relaxed);
 }
@@ -14,6 +14,10 @@ std::string Registered_Client::get_client_id() const {
 
 std::string Registered_Client::get_client_name() const {
 	return name_;
+}
+
+std::string Registered_Client::get_client_email() const {
+	return email_;
 }
 
 void Registered_Client::write_client_id(const std::string& id) {

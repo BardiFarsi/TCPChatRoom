@@ -143,6 +143,7 @@
     <ClCompile Include="Online_Clients.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="All_Clients.cpp" />
+    <ClCompile Include="Prompt.cpp" />
     <ClCompile Include="TCP_Connection.cpp" />
     <ClCompile Include="TCP_Server.cpp" />
     <ClCompile Include="User_Manager.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="All_Clients.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Master_Server.h" />
+    <ClInclude Include="Prompt.h" />
     <ClInclude Include="Registered_Client.h" />
     <ClInclude Include="backup.h" />
     <ClInclude Include="Buffer_Sanitizer.h" />

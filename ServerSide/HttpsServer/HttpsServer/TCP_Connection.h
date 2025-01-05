@@ -4,6 +4,7 @@
 #include "Buffer_Sanitizer.h"
 #include "User_Manager.h"
 #include "Message.h"
+#include "Prompt.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -36,7 +37,7 @@ public:
 	tcp::socket& socket();
 	void start(const std::string& message);
 	void do_read();
-	void do_write(const std::string& message);
+	void do_broadcast(const std::string& message);
 	void do_prompt_user(const std::string& message);
 	std::string read_from_user();
 	void stop_process();
@@ -61,7 +62,6 @@ private:
 	std::thread write_thread_;
 	std::string userId_;
 	std::string message_;
-	std::string readError_{ "Read Error!" };
 	std::vector<char> readData_;
 	std::vector<char> writeData_;
 };
