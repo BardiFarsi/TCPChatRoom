@@ -8,7 +8,7 @@ User_Manager::~User_Manager() = default;
 void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> connection) {
     if (!connection) {
         console.log("Invalid connection pointer");
-        PromptState::Connection_Failed;
+        PromptState::CONNECTION_FAILED;
         return;
     }
     
@@ -37,35 +37,41 @@ void User_Manager::master_entrance_handeler(std::shared_ptr<TCP_Connection> conn
 
             if (userResponse != g_readError) {
                 handle_user_response(userResponse, connection);
+                break;
             }
             else {
                 console.log("Error in read handling");
             }
         }
     }
-    catch (const std::exception& e) {
-        console.log("GateWay Error! ", e.what());
+    catch (...) {
+        console.log("GateWay Error! ");
+        catch_handler(connection);
         connection->stop_process();
     }
 }
 
 void User_Manager::handle_user_response(const std::string& userResponse, const std::shared_ptr<TCP_Connection> conncetion) {
-
-    if (userResponse == "1") {
-        user_sign_up(conncetion);
-        current_state_ = PromptState::EXIT;
+    error_code ec;
+   
+    if (!ec) {
+        if (userResponse == "1") {
+            user_sign_up(conncetion);
+            current_state_ = PromptState::OPTION_SELECTED;
+        }
+        else if (userResponse == "2") {
+            user_log_in(conncetion);
+            current_state_ = PromptState::OPTION_SELECTED;
+        }
+        else if (userResponse == "Exit++") {
+            current_state_ = PromptState::EXIT;
+            conncetion->stop_process();
+        }
+        else {
+            current_state_ = PromptState::INVALID_INPUT;
+        }
     }
-    else if (userResponse == "2") {
-        user_log_in(conncetion);
-        current_state_ = PromptState::EXIT;
-    }
-    else if (userResponse == "Exit++") {
-        current_state_ = PromptState::EXIT;
-        conncetion->stop_process();
-    }
-    else {
-        current_state_ = PromptState::INVALID_INPUT;
-    }
+    current_state_ = PromptState::CONNECTION_FAILED;
 }
 
 bool User_Manager::user_sign_up(std::shared_ptr<TCP_Connection> connection) {
@@ -217,9 +223,10 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
 
             if (!ec) {
                 if (ClientList.log_in_client(localId, localEmail, connection)) {
-                    connection->do_prompt_user(g_successLogInClientSide);
+                    auto client = ClientList.get_registered_client(localId); 
+                    client->connection_->do_prompt_user(g_successLogInClientSide);
                     console.log(g_successLogIn);
-                    // Function for which service you want to use? 
+                    prompt_which_main_service(client);
                     break;
                 } 
             }
@@ -234,6 +241,78 @@ bool User_Manager::user_log_in(std::shared_ptr<TCP_Connection> connection) {
     catch (...) {
         return catch_handler(connection);
     }
+}
+
+void User_Manager::prompt_which_main_service(std::shared_ptr<Client> client) {
+    error_code ec;
+    if (!ec && client->connection_->running_.load(std::memory_order_consume)) {
+        client->connection_->do_prompt_user(g_whichServiceMainPropmt);
+    }
+
+    std::string userResponse;
+    std::string handlerPrompt;
+
+    try {
+        while (!ec && service_state_ != ServiceState::EXIT) {
+            handlerPrompt.clear();
+            userResponse.clear();
+
+            if (service_state_ == ServiceState::INVALID_INPUT) {
+                handlerPrompt = g_invalidArgument;
+            }
+
+            handlerPrompt += g_whichServiceMainPropmt;
+
+            if (client->connection_->running_.load(std::memory_order_consume)) {
+                client->connection_->do_prompt_user(handlerPrompt);
+            }
+
+            if (client->connection_->running_.load(std::memory_order_consume)) {
+
+                userResponse = client->connection_->read_from_user();
+            }
+
+            if (userResponse != g_readError) {
+                process_selected_main_service(userResponse, client);
+            }
+            else {
+                console.log("Error in read handling");
+            }
+        }
+    service_state_ == ServiceState::CONNECTION_FAILED;
+    }
+    catch (...) {
+        console.log("Service GateWay Error! ");
+        catch_handler(client->connection_);
+        client->connection_->stop_process();
+    }
+}
+
+void User_Manager::process_selected_main_service(const std::string& response, std::shared_ptr<Client> client) {
+    error_code ec;
+
+    if (!ec) {
+        if (response == "1") {
+            add_partner_to_chat(client);
+            current_state_ = PromptState::OPTION_SELECTED;
+        }
+        else if (response == "2") {
+            join_group_chat(client);
+            current_state_ = PromptState::OPTION_SELECTED;
+        }
+        else if (response == "3") {
+            join_broadcast_server(client);
+            current_state_ = PromptState::OPTION_SELECTED;
+        }
+        else if (response == "Exit++") {
+            current_state_ = PromptState::EXIT;
+            client->connection_->stop_process();
+        }
+        else {
+            current_state_ = PromptState::INVALID_INPUT;
+        }
+    }
+    current_state_ = PromptState::CONNECTION_FAILED;
 }
 
 std::variant<bool, std::string> User_Manager::user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection) {
@@ -252,7 +331,7 @@ std::variant<bool, std::string> User_Manager::user_query_prompt_(std::string pro
             return prompt;
         }
 
-        current_state_ = PromptState::Connection_Failed;
+        current_state_ = PromptState::CONNECTION_FAILED;
         connection->running_.store(false, std::memory_order_release);
         connection->stop_process();
         return false;
@@ -279,7 +358,7 @@ bool User_Manager::catch_handler(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("Network error occurred during registration. Please try again later.");
             connection->running_.store(false, std::memory_order_release);
         }
-        current_state_ = PromptState::Connection_Failed;
+        current_state_ = PromptState::CONNECTION_FAILED;
         return false;
     }
     catch (const std::runtime_error& e) {
@@ -288,7 +367,7 @@ bool User_Manager::catch_handler(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("An unexpected error occurred during registration.");
             connection->running_.store(false, std::memory_order_release);
         }
-        current_state_ = PromptState::Connection_Failed;
+        current_state_ = PromptState::CONNECTION_FAILED;
         return false;
     }
     catch (...) {
@@ -297,7 +376,7 @@ bool User_Manager::catch_handler(std::shared_ptr<TCP_Connection> connection) {
             connection->do_prompt_user("An unexpected error occurred during registration.");
             connection->running_.store(false, std::memory_order_release);
         }
-        current_state_ = PromptState::Connection_Failed;
+        current_state_ = PromptState::CONNECTION_FAILED;
         return false;
     }
 }

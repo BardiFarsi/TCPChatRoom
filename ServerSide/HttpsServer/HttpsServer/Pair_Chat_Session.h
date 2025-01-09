@@ -6,15 +6,17 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include <memory>
 #include <span>
 
 class TCP_Connection;
 class User_Manager;
 
-class Pair_Chat_Server
+class Pair_Chat_Session
 {
 public:
+	Pair_Chat_Session() = default;
+	~Pair_Chat_Session() = default;
+
 	template <Message T>
 		requires Message<T>
 	void send_message_to_partner(T& message, std::shared_ptr<Client> sender) {
@@ -28,20 +30,24 @@ public:
 			reinterpret_cast<const char*>(bytes.data()), 
 			byte.size()
 		);
+		error_code ec; 
 		if (sender == pair_chat_session_.first) {
-			error_code ec; 
-			// if (sender == nullptr)
+			// if (sender == nullptr) for server
 			if (!ec) {
 				tcp::socket socket = pair_chat_session_.first->connection_->socket();
 				pair_chat_session_.first->connection_->do_write_partner(socket, messageStr);
 			}
 		}
 		else {
-			pair_chat_session_.second->connection_->do_write_partner(socket, messageStr);
+			if (!ec) {
+				pair_chat_session_.second->connection_->do_write_partner(socket, messageStr);
+			}
 		}
 	}
+
 	bool remove_client_pair_chat(const std::string& id);
 	bool add_client_pair_chat(std::shared_ptr<Client> client);
+
 private:
 	std::pair<std::shared_ptr<Client>, std::shared_ptr<Client>> pair_chat_session_;
 	std::mutex pair_session_mtx_;

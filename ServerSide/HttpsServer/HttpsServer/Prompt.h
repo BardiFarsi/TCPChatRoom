@@ -14,3 +14,4 @@ extern const std::string g_successLogIn;
 extern const std::string g_successLogInClientSide;
 extern const std::string g_emailAddressExist; 
 extern const std::string g_defaultConsoleUserResponse; 
+extern const std::string g_whichServiceMainPropmt;

@@ -3,9 +3,14 @@
 const std::string g_readError{ "Read Error!" };
 const std::string g_readExit{ "Exit++" };
 const std::string g_startingPrompt =
-    "To Sign Up as new client type '1'. \n" 
-    "To Login into your account type '2'. \n"
-    "To exit the app please type 'Exit++' \n";
+    "^__^ To Sign Up as new client type '1' ^__^ \n" 
+    "^__^ To Login into your account type '2' ^__^ \n"
+    "^__^ To exit the app please type 'Exit++' ^__^ \n";
+const std::string g_whichServiceMainPropmt = 
+    "^__^ To chat with your partner type '1': ^__^ \n" 
+    "^__^ To chat with a group of friends type '2': ^__^ \n"
+    "^__^ To have a broadcast to all online useres type '3' ^__^ \n"
+    "^__^ To exit type 'Exit++' ^__^ \n";
 const std::string g_userEmailLoginPrompt{
     "To Login please type your email below or Exit++ to close the connection: " };
 const std::string g_userIdLoginPrompt{ "Please type your User ID below or Exit++ to close the connection: " };

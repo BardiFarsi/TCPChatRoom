@@ -36,11 +36,21 @@ private:
 	enum class PromptState {
 		INITIAL,
 		INVALID_INPUT,
-		Connection_Failed,
+		CONNECTION_FAILED,
+		OPTION_SELECTED,
+		EXIT
+	};
+	enum class ServiceState {
+		INITIAL,
+		INVALID_INPUT,
+		CONNECTION_FAILED,
+		SERVICE_SELECTED,
 		EXIT
 	};
 	std::variant<bool, std::string> user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection);
 	void connection_stop_handler(std::shared_ptr<TCP_Connection> connection);
+	void prompt_which_main_service(std::shared_ptr<Client> client);
+	void process_selected_main_service(const std::string& response, std::shared_ptr<Client> client);
 	bool user_log_in(std::shared_ptr<TCP_Connection> connection);
 	bool user_sign_up(std::shared_ptr<TCP_Connection> connection);
 	bool catch_handler(std::shared_ptr<TCP_Connection> connection);
@@ -50,9 +60,10 @@ private:
 	std::string create_registration_announcement(const std::string& userId);
 	std::string client_id_generator();
 	std::string create_new_id();
-	PromptState current_state_ = PromptState::INITIAL;
 	Buffer_Sanitizer sanitizer_; 
 	Master_Server& masterServer_;
 	std::random_device rd;
 	std::mt19937_64 gen;
+	PromptState current_state_ = PromptState::INITIAL;
+	ServiceState service_state_ = ServiceState::INITIAL;
 };

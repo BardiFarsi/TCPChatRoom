@@ -139,12 +139,20 @@ bool All_Clients::delete_consistency(const std::string& id, const std::string& e
     return false;
 }
 
+std::shared_ptr<Client> All_Clients::get_registered_client(const std::string& id) const {
+    std::lock_guard<std::mutex> lock_valid(valid_mtx_);
+
+    if (auto it = valid_Clients_.find(id); it != valid_Clients_.end()) {
+        return it->second; 
+    }
+}
+
 size_t All_Clients::get_total_clients() const {
     std::lock_guard<std::mutex> lock(client_mtx_);
     return all_clients_.size();
 }
 
-size_t All_Clients::get_registered_clients() const {
+size_t All_Clients::get_registered_clients_size() const {
     std::lock_guard<std::mutex> lock(valid_mtx_);
     return valid_Clients_.size();
 }

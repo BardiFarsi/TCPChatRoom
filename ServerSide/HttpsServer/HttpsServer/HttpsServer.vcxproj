@@ -137,7 +137,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Master_Server.cpp" />
-    <ClCompile Include="Pair_Chat_Server.cpp" />
+    <ClCompile Include="Pair_Chat_Session.cpp" />
     <ClCompile Include="Registered_Client.cpp" />
     <ClCompile Include="LOGGER.cpp" />
     <ClCompile Include="main.cpp" />
@@ -153,7 +153,7 @@
     <ClInclude Include="All_Clients.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Master_Server.h" />
-    <ClInclude Include="Pair_Chat_Server.h" />
+    <ClInclude Include="Pair_Chat_Session.h" />
     <ClInclude Include="Prompt.h" />
     <ClInclude Include="Registered_Client.h" />
     <ClInclude Include="backup.h" />

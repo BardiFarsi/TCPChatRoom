@@ -36,8 +36,9 @@ public:
     bool log_in_client(const std::string& userId, const std::string& email, 
         std::shared_ptr<TCP_Connection> connection);
     std::optional<std::shared_ptr<Client>> valid_client_getter(const std::string& id) const;
+    std::shared_ptr<Client> get_registered_client(const std::string& id) const;
     size_t get_total_clients() const;
-    size_t get_registered_clients() const;
+    size_t get_registered_clients_size() const;
     ClientError get_last_error() const { return last_error_; };
 private:
     mutable std::mutex valid_mtx_;

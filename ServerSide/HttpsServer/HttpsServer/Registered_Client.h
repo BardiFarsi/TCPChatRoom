@@ -2,13 +2,16 @@
 #include "Client.h"
 #include "TCP_Connection.h"
 #include "Prompt.h"
+#include "Pair_Chat_Session.h"
 #include <string>
+
+class Pair_Chat_Session;
 
 class Registered_Client : public Client
 {
 public:
 	std::atomic<bool> clientHasId;
-	Registered_Client(std::shared_ptr<TCP_Connection> connection, std::string name, std::string email);
+	Registered_Client(std::shared_ptr<TCP_Connection> connection, std::string clientId, std::string email);
 	~Registered_Client();
 	std::string get_client_id() const override;
 	std::string get_client_name() const override;
@@ -19,5 +22,6 @@ public:
 protected:
 	std::string clientId_;
 	std::string name_;
+	Pair_Chat_Session pairChat_;
 };
 
