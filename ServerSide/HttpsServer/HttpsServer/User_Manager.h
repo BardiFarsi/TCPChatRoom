@@ -51,6 +51,7 @@ private:
 	void connection_stop_handler(std::shared_ptr<TCP_Connection> connection);
 	void prompt_which_main_service(std::shared_ptr<Client> client);
 	void process_selected_main_service(const std::string& response, std::shared_ptr<Client> client);
+	void add_partner_to_chat(std::shared_ptr<Client> client);
 	bool user_log_in(std::shared_ptr<TCP_Connection> connection);
 	bool user_sign_up(std::shared_ptr<TCP_Connection> connection);
 	bool catch_handler(std::shared_ptr<TCP_Connection> connection);

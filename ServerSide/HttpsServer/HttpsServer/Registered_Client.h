@@ -5,8 +5,6 @@
 #include "Pair_Chat_Session.h"
 #include <string>
 
-class Pair_Chat_Session;
-
 class Registered_Client : public Client
 {
 public:

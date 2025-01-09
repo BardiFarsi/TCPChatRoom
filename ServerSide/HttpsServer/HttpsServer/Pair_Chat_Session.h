@@ -14,8 +14,8 @@ class User_Manager;
 class Pair_Chat_Session
 {
 public:
-	Pair_Chat_Session() = default;
-	~Pair_Chat_Session() = default;
+	Pair_Chat_Session(std::shared_ptr<Client> client);
+	~Pair_Chat_Session();
 
 	template <Message T>
 		requires Message<T>
@@ -45,7 +45,7 @@ public:
 		}
 	}
 
-	bool remove_client_pair_chat(const std::string& id);
+	bool remove_client_pair_chat();
 	bool add_client_pair_chat(std::shared_ptr<Client> client);
 
 private:

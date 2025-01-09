@@ -297,11 +297,11 @@ void User_Manager::process_selected_main_service(const std::string& response, st
             current_state_ = PromptState::OPTION_SELECTED;
         }
         else if (response == "2") {
-            join_group_chat(client);
+            console.log("join_group_chat(client)");
             current_state_ = PromptState::OPTION_SELECTED;
         }
         else if (response == "3") {
-            join_broadcast_server(client);
+            console.log("join_broadcast_server(client);"); 
             current_state_ = PromptState::OPTION_SELECTED;
         }
         else if (response == "Exit++") {
@@ -313,6 +313,11 @@ void User_Manager::process_selected_main_service(const std::string& response, st
         }
     }
     current_state_ = PromptState::CONNECTION_FAILED;
+}
+
+void User_Manager::add_partner_to_chat(std::shared_ptr<Client> client) {
+    std::string id; 
+
 }
 
 std::variant<bool, std::string> User_Manager::user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection) {

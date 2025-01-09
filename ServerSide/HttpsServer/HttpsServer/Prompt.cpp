@@ -22,3 +22,4 @@ const std::string g_successLogIn{ "Client Successfully Logged In" };
 const std::string g_successLogInClientSide{ "Logged In Successfully" };
 const std::string g_emailAddressExist{ "The email address already exist! Please select Login" };
 const std::string g_defaultConsoleUserResponse{ "The user response is: " };
+const std::string g_addPartnerToChat{ "Type the Email or ID of your " };
