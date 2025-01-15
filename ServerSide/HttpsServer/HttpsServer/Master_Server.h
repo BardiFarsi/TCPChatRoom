@@ -30,13 +30,13 @@ using io_context = asio::io_context;
 using tcp = asio::ip::tcp;
 using error_code = boost::system::error_code;
 
-class TCP_Connection;
 class User_Manager; 
+class Pair_Chat_Session;
 
 class Master_Server : public std::enable_shared_from_this<Master_Server>
 {
 public:
-	template<Message T>
+	template<typename T>
 		requires Message<T>
 	void broadcast_message(T& message, std::shared_ptr<TCP_Connection> sender) {
 		static_assert(has_data_method<T>::value,

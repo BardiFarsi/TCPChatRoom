@@ -3,13 +3,15 @@
 TCP_Connection::TCP_Connection(io_context& io_context, Master_Server& masterServer) :
     socket_(io_context),
     strand_(asio::make_strand(io_context)),
-    masterServer_(masterServer)
+    masterServer_(masterServer),
+    onlineStatus(true)
 {
     running_.store(true, std::memory_order_seq_cst);
     std::cout << "TCP_Connection created\n";
 }
 
 TCP_Connection::~TCP_Connection() {
+    onlineStatus = false;
     stop_process();
     std::cout << "TCP_Connection destroyed\n";
 }

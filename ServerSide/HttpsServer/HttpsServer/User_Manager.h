@@ -5,6 +5,7 @@
 #include "Registered_Client.h"
 #include "All_Clients.h"
 #include "TCP_Connection.h"
+#include "Buffer_Sanitizer.h"
 #include "Message.h"
 #include "Prompt.h"
 #include <string>
@@ -23,6 +24,7 @@
 using error_code = boost::system::error_code;
 
 class Master_Server;
+class Pair_Chat_Session;
 
 class User_Manager
 {
@@ -45,21 +47,27 @@ private:
 		INVALID_INPUT,
 		CONNECTION_FAILED,
 		SERVICE_SELECTED,
+        RESPONSE_SENT,
 		EXIT
 	};
 	std::variant<bool, std::string> user_query_prompt_(std::string prompt, std::shared_ptr<TCP_Connection> connection);
 	void connection_stop_handler(std::shared_ptr<TCP_Connection> connection);
 	void prompt_which_main_service(std::shared_ptr<Client> client);
-	void process_selected_main_service(const std::string& response, std::shared_ptr<Client> client);
-	void add_partner_to_chat(std::shared_ptr<Client> client);
+	void process_selected_main_service(const std::string& response, std::shared_ptr<Client> user);
+    void process_chat_request_prompt(const std::string& response, std::shared_ptr<Client> user);
+	void add_partner_to_chat(std::shared_ptr<Client> user);
+    void add_new_friend(std::shared_ptr<Client> user);
+    void add_new_friend_handler(const std::string& response, std::shared_ptr<Client> user);
 	bool user_log_in(std::shared_ptr<TCP_Connection> connection);
 	bool user_sign_up(std::shared_ptr<TCP_Connection> connection);
 	bool catch_handler(std::shared_ptr<TCP_Connection> connection);
+    bool add_user_online_list(std::shared_ptr<Client> user);
 	static constexpr size_t TIMESTAMP_LENGTH = 10;
 	static constexpr size_t RANDOM_LENGTH = 6;
 	static constexpr size_t PREFIX_LENGTH = 3;
 	std::string create_registration_announcement(const std::string& userId);
 	std::string client_id_generator();
+    std::string user_prompter(const std::string& message, std::shared_ptr<Client> user);
 	std::string create_new_id();
 	Buffer_Sanitizer sanitizer_; 
 	Master_Server& masterServer_;

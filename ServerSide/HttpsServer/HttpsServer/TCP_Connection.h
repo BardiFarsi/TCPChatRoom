@@ -1,5 +1,6 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
+#include "Pair_Chat_Session.h"
 #include "LOGGER.h"
 #include "Buffer_Sanitizer.h"
 #include "User_Manager.h"
@@ -26,6 +27,8 @@ constexpr size_t BUFF_SIZE{ 1024 };
 static std::once_flag stop_flag_;
 
 class Master_Server;
+class Pair_Chat_Session;
+
 
 class TCP_Connection : public std::enable_shared_from_this<TCP_Connection>
 {
@@ -44,6 +47,7 @@ public:
 	TCP_Connection(TCP_Connection&& other) noexcept = default;
 	TCP_Connection& operator=(TCP_Connection&& other) noexcept = default;
 	std::atomic<bool> running_;
+    bool onlineStatus;
 private:
 	void stop();
 	void handle_communication();
@@ -65,3 +69,4 @@ private:
 	std::vector<char> readData_;
 	std::vector<char> writeData_;
 };
+
